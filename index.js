@@ -1,0 +1,29 @@
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const shops = require('./routes/shops');
+const barber = require('./routes/Barber');
+const addbarbershop = require('./routes/managing_barbershops');
+const reservation = require('./routes/reservation');
+const User = require('./routes/auth');
+
+const connectDB = require('./config/db');
+const app = express();
+const port = process.env.PORT || 3000;
+
+connectDB();
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Basic route
+app.use('/userview-shops', shops);
+app.use('/shop-barbers', barber);
+app.use('/manage-barbershop', addbarbershop);
+app.use('/reservations', reservation);
+app.use('/user-managment',User)
+// Start server
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});

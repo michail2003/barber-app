@@ -1,0 +1,71 @@
+# =========================
+# Node / Express
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# =========================
+# Build outputs
+# =========================
+dist/
+build/
+
+# =========================
+# React
+# =========================
+.cache/
+.parcel-cache/
+.vite/
+.vite-cache/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Testing
+# =========================
+coverage/
+
+# =========================
+# Uploads (optional)
+# =========================
+uploads/
+public/uploads/
+
+# =========================
+# MongoDB
+# =========================
+data/
+*.bson
+
+# =========================
+# Misc
+# =========================
+*.env
