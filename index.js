@@ -3,7 +3,6 @@ const cors = require('cors');
 require('dotenv').config();
 
 const shops = require('./routes/shops');
-const barber = require('./routes/Barber');
 const addbarbershop = require('./routes/managing_barbershops');
 const reservation = require('./routes/reservation');
 const User = require('./routes/auth');
@@ -19,7 +18,6 @@ app.use(express.json());
 
 // Basic route
 app.use('/userview-shops', shops);
-app.use('/shop-barbers', barber);
 app.use('/manage-barbershop', addbarbershop);
 app.use('/reservations', reservation);
 app.use('/user-managment',User)
