@@ -11,5 +11,14 @@ async function add_barber(barberData) {
     }
 }
 
+async function barber_exit(id) {
+    try {
+        const response = await axios.post(`${API_Shop}/barber-exit/${id}/`);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating:', error);
+        throw error;
+    }
+}
 
-export { add_barber };
+export { add_barber,barber_exit };

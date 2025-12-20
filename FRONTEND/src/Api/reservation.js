@@ -1,9 +1,9 @@
 import axios from "axios";
-const Api = 'http://localhost:5000/reservations/reserve'
+const Api = 'http://localhost:5000/reservations'
 
 async function reservation(reservationData) {
     try {
-        const response = await axios.post(`${Api}`, reservationData);
+        const response = await axios.post(`${Api}/reserve`, reservationData);
         return response.data;
     } catch (error) {
         console.error('Error getting data from server:', error);
@@ -11,4 +11,14 @@ async function reservation(reservationData) {
     }
 }
 
-export { reservation };
+async function barber_reservations(barberid){
+    try{
+        const response = await axios.get(`${Api}/${barberid}/reservations`);
+        return response.data
+    } catch (error) {
+        console.error('Error getting data from server:', error);
+        throw error;
+    }
+}
+
+export { reservation,barber_reservations };

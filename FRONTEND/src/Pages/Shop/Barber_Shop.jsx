@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import Calendar from '../../components/Calendar';
 import { reservation } from '../../Api/reservation';
 import dayjs from 'dayjs';
+import { ProtectedButton } from '../../components/ProtectedButton';
+import { barber_exit } from '../../Api/Barber';
+
 
 const Barber_Shop = () => {
   const [shop, setShop] = useState([]);
@@ -32,6 +35,7 @@ const Barber_Shop = () => {
     try {
       const data = await getbarbers(slug);
       setBarbers(data);
+      console.log(data)
     }
     catch (error) {
       console.error('Failed to fetch barbers:', error);
@@ -45,9 +49,7 @@ const Barber_Shop = () => {
       start: reservationData.start,
       customer_name: reservationData.customer_name,
       customer_phone: reservationData.customer_phone,
-    }
-
-    )
+    })
       .then((data) => {
         console.log('Reservation successful:', data);
       })
@@ -55,54 +57,98 @@ const Barber_Shop = () => {
         console.error('Reservation failed:', error);
       });
   }
-  console.log(reservationData)
+
+
   useEffect(() => {
     fetchShop();
     fetchBarbers();
   }, []);
+
   return (
-
-    <div>
-
-      {shop.name}
-      <br />
-      {barbers.map((barber) => (
-        <div key={barber._id} className="border p-4 m-4 rounded shadow">
-          <h3 className="text-xl font-bold">{barber.name}</h3>
-          <p>Phone: {barber.phone}</p>
-          <p>Hours: {barber.hours}</p>
-          <div>Services:
-            <ul>
-              {barber.services.map((service, index) => (
-                <li key={index}>{service.name} - ${service.price} - {service.duration} mins
-                  <button className='cursor-pointer ml-10 border-2 px-2' onClick={()=>
-
-                    setReservationData({
-                      barberId: barber._id,
-                      serviceId: service._id,
-                      start: selectedDateTime,
-                      customer_name: 'test',
-                      customer_phone: '+0000000',
-                    })  
-                  }>reserve
-                  </button>
-                  <button className = 'cursor-pointer ml-10 border-2 px-2'onClick={handleReservation}>
-                    submit
-                  </button>
-                  <Calendar
-                    value={selectedDateTime}
-                    onChange={setSelectedDateTime}
-                  /></li>
-              ))}
-            </ul>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Shop Header */}
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight uppercase">
+            {shop.name}
+          </h1>
+          <div className="mt-2 h-1 w-20 bg-blue-600 mx-auto rounded-full"></div>
         </div>
-      ))}
-      <br />
-      <Link to={`/${slug}/barber`} className="m-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-        Add Barber
-      </Link>
 
+        {/* Barbers Grid */}
+        <div className="grid grid-cols-1 gap-8">
+          {barbers.map((barber) => (
+            <div key={barber._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+              <div className="p-6 md:p-8">
+                
+                {/* Barber Info */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 pb-6 border-b border-gray-100">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                      {barber.userId?.name}
+                    </h3>
+                    <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                      <span>📞 {barber.userId?.ph_number}</span>
+                      <span>🕒 {barber.hours}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Services Section */}
+                <div>
+                  <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Available Services</h4>
+                  <ul className="space-y-4">
+                    {barber.services.map((service, index) => (
+                      <li key={index} className="bg-gray-50 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">{service.name}</p>
+                          <p className="text-sm text-gray-500">{service.duration} mins • <span className="text-blue-600 font-bold">${service.price}</span></p>
+                        </div>
+
+                        {/* Booking Controls */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Calendar
+                            value={selectedDateTime}
+                            onChange={setSelectedDateTime}
+                          />
+                          <button 
+                            className='cursor-pointer bg-white border border-blue-600 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition' 
+                            onClick={() => setReservationData({
+                              barberId: barber._id,
+                              serviceId: service._id,
+                              start: selectedDateTime,
+                              customer_name: 'test',
+                              customer_phone: '+0000000',
+                            })}
+                          >
+                            Select
+                          </button>
+                          <button 
+                            className='cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition active:scale-95'
+                            onClick={handleReservation}
+                          >
+                            Book Now
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer Actions */}
+        <ProtectedButton roles={['barber_admin','admin']}>
+           <div className="mt-12 text-center">
+          <Link to={`/${slug}/barber`} className="inline-block px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transform transition hover:-translate-y-1">
+            + Add New Barber
+          </Link>
+        </div>
+        </ProtectedButton>
+      </div>
     </div>
   )
 }

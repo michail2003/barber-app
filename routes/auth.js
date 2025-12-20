@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const { Barber } = require('../models/Barber');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -23,7 +24,7 @@ router.post('/register', async (req, res) => {
             password: hashedPassword,
             ph_number,
             name,
-            role:"user"
+            role: "user"
 
         });
         return res.status(201).json({
@@ -53,14 +54,29 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(401).json({
         error: 'Invalid email or password'
     });
+   if (user.role === 'barber' || user.role === 'barber_admin') {
+    
+    const barber = await Barber.findOne({ userId: user._id });
+    if (!barber) {
+        return res.status(404).json({ error: 'Barber profile not found' });
+    }
 
     const token = jwt.sign({
-        id: user._id,
+        id: barber._id, 
         role: user.role
-    }, JWT_SECRET, {
-    });
-    res.json({
-        token
-    });
+    }, JWT_SECRET);
+
+    return res.json({ token });
+
+} else {
+
+    const token = jwt.sign({
+        id: user._id, 
+        role: user.role
+    }, JWT_SECRET);
+
+    return res.json({ token });
+}
+
 });
 module.exports = router;

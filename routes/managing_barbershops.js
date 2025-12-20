@@ -23,8 +23,8 @@ router.post('/addingshop', async (req, res) => {
 
 router.post(
     '/add-barber',
-    // authMiddleware,
-    // allowRoles('admin', 'barber_admin'),
+    authMiddleware,
+    allowRoles('admin', 'barber_admin'),
     async (req, res) => {
         try {
             const {
@@ -110,12 +110,38 @@ router.get('/:slug/barbers', async (req, res) => {
         if (!shop) {
             return res.status(404).json({ message: 'Barber shop not found' });
         }
-        const barbers = await Barber.find({ shopId: shop._id });
+        const barbers = await Barber.find({ shopId: shop._id })
+        .populate('userId','name ph_number');
         res.json(barbers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
+router.put('/barber-exit/:barberId', async (req, res) => {
+    try {
+        const { barberId } = req.params;
+
+        // 1. Find the barber to get their userId before deleting
+        const barber = await Barber.findById(barberId);
+
+        if (!barber) {
+            return res.status(404).json({ message: "Barber profile not found in this shop." });
+        }
+
+        const userIdToUpdate = barber.userId;
+
+        // 2. Delete only from the Barbers collection
+        await Barber.findByIdAndDelete(barberId);
+
+        // 3. Change the user's role back to 'user' so they can't access barber panels
+        // This keeps the user account (69457dcbe2a76c5a5d2a2707) alive in the DB
+        await User.findByIdAndUpdate(userIdToUpdate, { role: 'user' });
+
+        res.json({ message: "Barber removed from shop. User account preserved as regular user." });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing barber", error: error.message });
+    }
+});
 
 module.exports = router;

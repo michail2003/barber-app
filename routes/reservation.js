@@ -5,6 +5,7 @@ const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 const { Barber } = require('../models/Barber');
 const { Reservation } = require('../models/Reservation');
+const { allowRoles, authMiddleware } = require('../middleware/auth_middleware') 
 
 function isOverlapping(start1, end1, start2, end2) {
   return dayjs(start1).utc().isBefore(dayjs(end2).utc()) &&
@@ -62,28 +63,44 @@ router.post('/reserve', async (req, res) => {
 
 
     // 6️⃣ Create reservation
-      const reservation = await Reservation.create({
-        barberId,
-        serviceId,
-        start: startTime.toDate(),
-        end: endTime.toDate(),
-        customer_name,
-        customer_phone,
-        status : 'confirmed'
-      });
+    const reservation = await Reservation.create({
+      barberId,
+      serviceId,
+      start: startTime.toDate(),
+      end: endTime.toDate(),
+      customer_name,
+      customer_phone,
+      status: 'confirmed'
+    });
 
-      // 7️⃣ Link reservation to barber
-      barber.reservations.push(reservation._id);
-      await barber.save();
+    // 7️⃣ Link reservation to barber
+    barber.reservations.push(reservation._id);
+    await barber.save();
 
-      res.status(201).json({
-        message: 'Reservation created successfully',
-        reservation
-      });
+    res.status(201).json({
+      message: 'Reservation created successfully',
+      reservation
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+router.get('/:barberID/reservations', authMiddleware,
+    allowRoles('barber','barber_admin'),async (req, res) => {
+  try {
+    const barberID = req.params.barberID
+    const reservations = await Barber.findById(barberID).populate('reservations', 'start end')
+
+    if (!reservations) {
+      res.status(404).json({ message: "reservation not found" })
+    }
+    res.status(200).json(reservations['reservations'])
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+
+})
 module.exports = router;

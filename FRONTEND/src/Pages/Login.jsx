@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { login } from '../Api/User'; // your API helper
-
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
 
   const handleLogin = async () => {
     setError('');
@@ -14,7 +14,6 @@ const Login = () => {
     try {
       // call your login API with actual data
       const response = await login({ email, password });
-      localStorage.setItem("token",response.token)
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || 'Login failed');
