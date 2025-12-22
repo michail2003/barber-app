@@ -18,16 +18,13 @@ async function login(login_data) {
         const response = await axios.post(`${api_link}/login`, login_data);
         const token = response.data.token;
         const decoded = jwtDecode(token);
-        if (decoded.role == 'admin') {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            localStorage.setItem('token', token);
-        }
-        else if (decoded.role == 'barber'|| decoded.role == 'barber_admin') {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            localStorage.setItem('token', token);
-            const decoded = jwtDecode(token);
-            localStorage.setItem('id', decoded.id);
-        }
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        localStorage.setItem('token', token);
+        localStorage.setItem('name', decoded.name);
+        localStorage.setItem('number',decoded.numer);
+        localStorage.setItem('id',decoded.id)
+        localStorage.setItem('role',decoded.role)
+        localStorage.setItem('shop',decoded.shop)
 
         return response.data;
     } catch (error) {

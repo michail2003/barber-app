@@ -3,7 +3,6 @@ const router = express.Router();
 const Shop = require('../models/Shop');
 
 router.get('/', async (req, res) => {
-    console.log("SERVER SECRET IS:", process.env.SECRET_KEY);
         try {
             const shops = await Shop.find();
             if (shops.length === 0) {

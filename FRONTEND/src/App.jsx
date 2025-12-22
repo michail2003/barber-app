@@ -5,10 +5,10 @@ import Home from "./Pages/Home";
 import Dashboard from "./Pages/Admin/Dashboard";
 import BarberShop from "./Pages/Shop/Barber_Shop";
 import Barber from "./Pages/Shop/Barber";
+import StaffDetails from "./Pages/Shop/staffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
 import Reservations from "./Pages/Shop/Reservations";
-import StaffDetails from "./Pages/Shop/StaffDetails"
 import axios from "axios";
 
 function App() {
@@ -47,7 +47,7 @@ function App() {
         <Route
           path="/staff/details"
           element={
-            <ProtectedRoute allowedRoles={['barber_admin']}>
+            <ProtectedRoute allowedRoles={['barber_admin','barber']}>
               <StaffDetails />
             </ProtectedRoute>
           }

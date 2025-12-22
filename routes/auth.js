@@ -54,6 +54,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(401).json({
         error: 'Invalid email or password'
     });
+
    if (user.role === 'barber' || user.role === 'barber_admin') {
     
     const barber = await Barber.findOne({ userId: user._id });
@@ -63,7 +64,9 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({
         id: barber._id, 
-        role: user.role
+        role: user.role,
+        shop : barber.shopId,
+        name: user.name
     }, JWT_SECRET);
 
     return res.json({ token });
@@ -72,7 +75,9 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({
         id: user._id, 
-        role: user.role
+        role: user.role,
+        name: user.name,
+        phone: user.ph_number
     }, JWT_SECRET);
 
     return res.json({ token });

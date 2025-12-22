@@ -5,7 +5,7 @@ const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 const { Barber } = require('../models/Barber');
 const { Reservation } = require('../models/Reservation');
-const { allowRoles, authMiddleware } = require('../middleware/auth_middleware') 
+const { allowRoles, authMiddleware } = require('../middleware/auth_middleware');
 
 function isOverlapping(start1, end1, start2, end2) {
   return dayjs(start1).utc().isBefore(dayjs(end2).utc()) &&
@@ -87,20 +87,55 @@ router.post('/reserve', async (req, res) => {
   }
 });
 
-router.get('/:barberID/reservations', authMiddleware,
-    allowRoles('barber','barber_admin'),async (req, res) => {
+router.get('/:barberID/reservations', authMiddleware, allowRoles('barber', 'barber_admin'), async (req, res) => {
   try {
     const barberID = req.params.barberID
-    const reservations = await Barber.findById(barberID).populate('reservations', 'start end')
+    const reservations = await Barber.findById(barberID).populate('reservations', 'start end status')
 
     if (!reservations) {
-      res.status(404).json({ message: "reservation not found" })
+      return res.status(404).json({ message: "reservation not found" })
     }
-    res.status(200).json(reservations['reservations'])
+    return res.status(200).json(reservations['reservations'])
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 
 })
+
+router.post('/:barbershopID/all/reservations', authMiddleware, allowRoles('barber', 'barber_admin'), async (req, res) => {
+  try {
+    const shop = req.params.barbershopID;
+    const { start, end } = req.body;
+
+    const barbers = await Barber.find({ shopId: shop }).populate('reservations');
+
+    if (!barbers || barbers.length === 0) {
+      return res.status(404).json({ message: "No barbers found for this shop" });
+    }
+
+    const availableBarbers = barbers.filter(barber => {
+      // We save the result of the .every() check into a variable
+      const hasNoConflicts = barber.reservations.every(resv => {
+        // We MUST return the result of the function here
+        return !isOverlapping(
+          resv.start,
+          resv.end,
+          start,
+          end
+        );
+      });
+
+      // Now we return that result to the .filter()
+      return hasNoConflicts;
+    });
+
+    // 3. Return the result
+    return res.status(200).json(availableBarbers.length);
+
+  } catch (error) {
+    // Added 'return' here to prevent the "Headers already sent" error if something goes wrong
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 module.exports = router;
