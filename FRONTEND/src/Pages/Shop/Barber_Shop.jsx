@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getShop, getbarbers } from '../../Api/Shops';
-import { data, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Calendar from '../../components/Calendar';
 import { reservation, barbers_available } from '../../Api/reservation';
 import dayjs from 'dayjs';
@@ -54,19 +54,26 @@ const Barber_Shop = () => {
         alert('Reservation successful');
       })
       .catch((error) => {
-        alert(`is booked`)
+        alert(`is booked ${error}`)
       });
   }
-
   async function available_barbers() {
     try {
-      const shop = localStorage.getItem('shop')
-      const data = await barbers_available(shop,)
+      const shopid = shop._id
+
+      const start = selectedDateTime.toISOString()
+      const end = selectedDateTime.clone().add(30, 'minutes').toISOString()
+
+      const data = await barbers_available(shopid, { start, end })
+
       setavailableBarbers(data)
     } catch (err) {
-      alert
+      alert(err)
     }
   }
+  useEffect(()=>{
+    console.log(availableBarbers)
+  },[availableBarbers])
   useEffect(() => {
     fetchShop();
     fetchBarbers();
@@ -147,12 +154,15 @@ const Barber_Shop = () => {
             </div>
           ))}
         </div>
-        <div className='flex flex-col gap-2 w-1/5'>
+        <div className='flex flex-col gap-2 w-2/5'>
           <Calendar
             value={selectedDateTime}
             onChange={setSelectedDateTime}
           />
-          <button className='cursor-pointer px-2 py-1 border-2 rounded-xl' onClick={available_barbers}>check availability</button>
+          <button className='cursor-pointer px-2 py-1 border-2 rounded-xl'
+            onClick={available_barbers}>
+            check availability
+          </button>
           <div className='flex gap-2'>
           </div>
         </div>

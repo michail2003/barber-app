@@ -103,12 +103,12 @@ router.get('/:barberID/reservations', authMiddleware, allowRoles('barber', 'barb
 
 })
 
-router.post('/:barbershopID/all/reservations', authMiddleware, allowRoles('barber', 'barber_admin'), async (req, res) => {
+router.post('/:barbershopID/all/reservations',async (req, res) => {
   try {
     const shop = req.params.barbershopID;
     const { start, end } = req.body;
 
-    const barbers = await Barber.find({ shopId: shop }).populate('reservations');
+    const barbers = await Barber.find({ shopId: shop }).populate('reservations').populate('userId','name');
 
     if (!barbers || barbers.length === 0) {
       return res.status(404).json({ message: "No barbers found for this shop" });
@@ -131,11 +131,15 @@ router.post('/:barbershopID/all/reservations', authMiddleware, allowRoles('barbe
     });
 
     // 3. Return the result
-    return res.status(200).json(availableBarbers.length);
+    return res.status(200).json(availableBarbers);
 
   } catch (error) {
     // Added 'return' here to prevent the "Headers already sent" error if something goes wrong
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
+
 });
+router.get('/available-barbers/:shopID',async(req, res)=>{
+  
+})
 module.exports = router;
