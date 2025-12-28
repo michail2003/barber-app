@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 /* ---------------- RESERVATIONS (embedded in Barber) ---------------- */
 const ReservationSchema = new mongoose.Schema({
-  // userid : {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "User",
-  //   required: true
-  // },
+  userid : {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
   barberId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Barber",

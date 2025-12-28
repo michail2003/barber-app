@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Barber_Shop = require('../models/Shop');
-const { Barber } = require('../models/Barber');
+const { Barber } = require('../models/barber');
 const  User  = require('../models/User'); 
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware') 
 const bcrypt = require('bcryptjs');
 
 router.post('/addingshop', async (req, res) => {
-    const { name, address, phone, opening_hours, logo_url, nipt } = req.body;
+    const { name, address, phone, hours_start,hours_end ,logo_url,services } = req.body;
     try {
-        const existingShop = await Barber_Shop.findOne({ nipt });
-        if (existingShop) {
-            return res.status(400).json({ message: 'Barber shop already exists' });
-        }
-        const newShop = new Barber_Shop({ nipt, name, address, phone, opening_hours, logo_url });
+        const newShop = new Barber_Shop({ services, name, address, phone, hours_start,hours_end,logo_url });
         await newShop.save();
         res.status(201).json({ message: 'Barber shop created', newShop });
     } catch (error) {
@@ -23,19 +19,20 @@ router.post('/addingshop', async (req, res) => {
 
 router.post(
     '/add-barber',
-    authMiddleware,
-    allowRoles('admin', 'barber_admin'),
+    // authMiddleware,
+    // allowRoles('admin', 'barber_admin'),
     async (req, res) => {
         try {
             const {
                 shopId,
                 name,
                 ph_number,
-                hours,
+                hours_start,
+                hours_end,
                 email,
                 password,
                 role,
-                services, // 'barber' or 'barber_admin'
+                // services, 'barber' or 'barber_admin'
             } = req.body;
 
             // 1️⃣ Validate role
@@ -63,8 +60,9 @@ router.post(
             const barber = await Barber.create({
                 userId: user._id,
                 shopId,
-                hours,
-                services
+                hours_start,
+                hours_end,
+                // services
             });
 
             res.status(201).json({

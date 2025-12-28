@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); 
-const { Barber } = require('../models/Barber');
+const { Barber } = require('../models/barber');
 const { authMiddleware, allowRoles } = require('../middleware/auth_middleware');
 
 router.get('/shop-staff/:shopId',authMiddleware,allowRoles('barber_admin') ,async (req, res) => {

@@ -3,7 +3,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
-const { Barber } = require('../models/Barber');
+const  {Barber}  = require('../models/barber');
 const { Reservation } = require('../models/Reservation');
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware');
 

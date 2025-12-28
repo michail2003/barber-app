@@ -8,6 +8,7 @@ import Barber from "./Pages/Shop/Barber";
 import StaffDetails from "./Pages/Shop/staffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
+import Test from './Pages/Test'
 import Reservations from "./Pages/Shop/Reservations";
 import axios from "axios";
 
@@ -38,6 +39,7 @@ function App() {
 
         <Route path='/register/user' element={<Register />} />
         <Route path='/login/user' element={<Login />} />
+        <Route path='/test' element={<Test />} />
 
         <Route path=':barberID/reservations' element={
           <ProtectedRoute allowedRoles={['barber_admin', 'barber']}>

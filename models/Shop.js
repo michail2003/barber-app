@@ -1,15 +1,20 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const service = require("./service");
 
-
+const ServiceCatalog = new mongoose.Schema(
+  {
+    service:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Service',
+    },
+    price:{
+      type: Number
+    }
+  }
+)
 const BarberShopSchema = new mongoose.Schema(
   {
-    nipt: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true
-    },
     name: {
       type: String,
       required: true,
@@ -30,14 +35,19 @@ const BarberShopSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-    opening_hours: {
+    hours_start: {
       type: String,
-      trim: true
+      required: true
+    },
+    hours_end: {
+      type: String,
+      require: true
     },
     logo_url: {
       type: String,
       trim: true
-    }
+    },
+    services: [ServiceCatalog],
   },
   { timestamps: true }
 );
@@ -46,7 +56,7 @@ BarberShopSchema.pre("save", function () {
 
   const suffix = this._id.toString().slice(-3);
   this.slug = `${this.name}-${suffix}`;
-  
+
 });
 
 module.exports = mongoose.model("BarberShop", BarberShopSchema);

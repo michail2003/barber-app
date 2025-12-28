@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
 
-/* ---------------- SERVICES (embedded in Barber) ---------------- */
-const ServiceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  duration: { type: Number, required: true } // minutes
-});
+/* ---------------- SERVICES  ---------------- */
 
+const BarberServiceSchema = new mongoose.Schema({
+  service: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  duration: {
+    type: Number, // minutes
+    required: true
+  }
+});
 /* ---------------- BARBER ---------------- */
 const BarberSchema = new mongoose.Schema({
   userId: {
@@ -19,14 +24,19 @@ const BarberSchema = new mongoose.Schema({
     ref: "BarberShop",
     required: true
   },
-  hours: { type: String, required: true }, // "09:00-21:00"
-  services: [ServiceSchema],
+  hours_start: {
+    type:String,
+    required: true
+  },
+    hours_end: {
+    type:String,
+    required: true
+  },
+  services: [BarberServiceSchema],
   reservations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Reservation"
   }],
 }, { timestamps: true });
 
-const Barber = mongoose.model("Barber", BarberSchema);
-
-module.exports = { Barber };
+module.exports = mongoose.model("Barber", BarberSchema);
