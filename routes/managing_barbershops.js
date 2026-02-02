@@ -1,26 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const Barber_Shop = require('../models/Shop');
-const { Barber } = require('../models/barber');
-const  User  = require('../models/User'); 
-const { allowRoles, authMiddleware } = require('../middleware/auth_middleware') 
+const Barber = require('../models/barber');
+const User = require('../models/User');
+const { allowRoles, authMiddleware } = require('../middleware/auth_middleware')
 const bcrypt = require('bcryptjs');
+const service = require('../models/service');
 
-router.post('/addingshop', async (req, res) => {
-    const { name, address, phone, hours_start,hours_end ,logo_url,services } = req.body;
-    try {
-        const newShop = new Barber_Shop({ services, name, address, phone, hours_start,hours_end,logo_url });
-        await newShop.save();
-        res.status(201).json({ message: 'Barber shop created', newShop });
-    } catch (error) {
-        res.status(400).json({ message: 'Error creating barber shop', error: error.message });
-    }
-});
+router.post('/addingshop', authMiddleware,
+    allowRoles('admin'), async (req, res) => {
+        const { name, address, phone, hours_start, hours_end, logo_url, services } = req.body;
+        try {
+            const newShop = new Barber_Shop({ services, name, address, phone, hours_start, hours_end, logo_url });
+            await newShop.save();
+            res.status(201).json({ message: 'Barber shop created', newShop });
+        } catch (error) {
+            res.status(400).json({ message: 'Error creating barber shop', error: error.message });
+        }
+    });
 
 router.post(
     '/add-barber',
-    // authMiddleware,
-    // allowRoles('admin', 'barber_admin'),
+    authMiddleware,
+    allowRoles('admin', 'barber_admin'),
     async (req, res) => {
         try {
             const {
@@ -32,16 +34,36 @@ router.post(
                 email,
                 password,
                 role,
-                // services, 'barber' or 'barber_admin'
+                services
             } = req.body;
 
+            const shop = await Barber_Shop.findById(shopId);
+            if (!shop) {
+                return res.status(404).json({ message: 'Shop not found' });
+            }
+            const shopServicesIds = shop.services.map(s => s._id.toString()
+            );
+            const allServicesValid = services.every(service =>
+                shopServicesIds.includes(service.service.toString())
+            );
+            
+            if (!allServicesValid) {
+                return res.status(400).json({ message: 'you must add services from shop' });
+            }
+            
+            const full_service_list = services.map(s => ({
+                service: s.service,
+                service_name: shop.services.find(ss => ss._id.toString() === s.service.toString()).service_name,
+                price: shop.services.find(ss => ss._id.toString() === s.service.toString()).price,
+                duration: s.duration
+            }));
             // 1️⃣ Validate role
             if (!['barber', 'barber_admin'].includes(role)) {
                 return res.status(400).json({ message: 'Invalid barber role' });
             }
 
             // 2️⃣ Check if user exists
-            const existingUser = await User.findOne({email});
+            const existingUser = await User.findOne({ email });
             if (existingUser) {
                 return res.status(400).json({ message: 'User already exists' });
             }
@@ -56,13 +78,14 @@ router.post(
                 name,
                 ph_number
             });
+
             // 4️⃣ Create barber profile
             const barber = await Barber.create({
                 userId: user._id,
                 shopId,
                 hours_start,
                 hours_end,
-                // services
+                services : full_service_list
             });
 
             res.status(201).json({
@@ -71,7 +94,7 @@ router.post(
             });
 
         } catch (err) {
-            res.status(500).json({ message: 'Server error',error: err.message });
+            res.status(500).json({ message: 'Server error', error: err.message });
         }
     }
 );
@@ -108,38 +131,26 @@ router.get('/:slug/barbers', async (req, res) => {
         if (!shop) {
             return res.status(404).json({ message: 'Barber shop not found' });
         }
-        const barbers = await Barber.find({ shopId: shop._id })
-        .populate('userId','name ph_number');
+        const barbers = await Barber.find({ shopId: shop._id.toString() })
+            .populate('userId', 'name ph_number');
         res.json(barbers);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
-
-router.put('/barber-exit/:barberId', async (req, res) => {
-    try {
-        const { barberId } = req.params;
-
-        // 1. Find the barber to get their userId before deleting
-        const barber = await Barber.findById(barberId);
-
-        if (!barber) {
-            return res.status(404).json({ message: "Barber profile not found in this shop." });
+router.delete('/permanent-delete/:barbershop', authMiddleware,
+    allowRoles('admin'), async (req, res) => {
+        const shopID = req.params.barbershop;
+        try {
+            const shop = await Barber_Shop.findByIdAndDelete(shopID)
+            if (!shop) {
+                return res.status(404).json({ message: "barber shop not found" });
+            }
+            return res.status(200).json({ message: `barber shop ${shop.name} was removed permanently from db` });
+        } catch (error) {
+            res.status(500).json({ message: "Error removing barbershop", error: error.message });
         }
+    })
 
-        const userIdToUpdate = barber.userId;
-
-        // 2. Delete only from the Barbers collection
-        await Barber.findByIdAndDelete(barberId);
-
-        // 3. Change the user's role back to 'user' so they can't access barber panels
-        // This keeps the user account (69457dcbe2a76c5a5d2a2707) alive in the DB
-        await User.findByIdAndUpdate(userIdToUpdate, { role: 'user' });
-
-        res.json({ message: "Barber removed from shop. User account preserved as regular user." });
-    } catch (error) {
-        res.status(500).json({ message: "Error removing barber", error: error.message });
-    }
-});
 
 module.exports = router;

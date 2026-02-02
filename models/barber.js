@@ -10,6 +10,12 @@ const BarberServiceSchema = new mongoose.Schema({
   duration: {
     type: Number, // minutes
     required: true
+  },
+  service_name: {
+    type:String
+  },
+  price:{
+    type:Number
   }
 });
 /* ---------------- BARBER ---------------- */
@@ -26,11 +32,9 @@ const BarberSchema = new mongoose.Schema({
   },
   hours_start: {
     type:String,
-    required: true
   },
     hours_end: {
     type:String,
-    required: true
   },
   services: [BarberServiceSchema],
   reservations: [{

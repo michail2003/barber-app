@@ -8,12 +8,12 @@ import { ProtectedButton } from '../../components/ProtectedButton';
 
 
 const Barber_Shop = () => {
-  const [shop, setShop] = useState([]);
+  const [shop, setShop] = useState({});
   const [barbers, setBarbers] = useState([]);
   const [selectedDateTime, setSelectedDateTime] = useState(dayjs());
   const [reservationData, setReservationData] = useState({
     barberId: '',
-    serviceId: '',
+    serviceId: {},
     start: '',
     customer_name: '',
     customer_phone: ''
@@ -41,7 +41,6 @@ const Barber_Shop = () => {
       console.error('Failed to fetch barbers:', error);
     }
   };
-
   async function handleReservation() {
     await reservation({
       barberId: reservationData.barberId,
@@ -71,9 +70,7 @@ const Barber_Shop = () => {
       alert(err)
     }
   }
-  useEffect(()=>{
-    console.log(availableBarbers)
-  },[availableBarbers])
+  console.log(reservationData.start);
   useEffect(() => {
     fetchShop();
     fetchBarbers();
@@ -117,8 +114,8 @@ const Barber_Shop = () => {
                     {barber.services.map((service, index) => (
                       <li key={index} className="bg-gray-50 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{service.name}</p>
-                          <p className="text-sm text-gray-500">{service.duration} mins • <span className="text-blue-600 font-bold">${service.price}</span></p>
+                          <p className="font-semibold text-gray-900">{service.service_name}</p>
+                          <p className="text-sm text-gray-500">{service.duration} mins • <span className="text-blue-600 font-bold">{service.price} Leke</span></p>
                         </div>
 
                         {/* Booking Controls */}
@@ -131,11 +128,12 @@ const Barber_Shop = () => {
                             className='cursor-pointer bg-white border border-blue-600 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition'
                             onClick={() => setReservationData({
                               barberId: barber._id,
-                              serviceId: service._id,
+                              serviceId: [service._id],
                               start: selectedDateTime,
                               customer_name: localStorage.getItem('name') || 'guest',
                               customer_phone: localStorage.getItem('phone') || 'no phone provided',
-                            })}
+                            })
+                            }
                           >
                             Select
                           </button>

@@ -1,26 +1,43 @@
 import { useState, useEffect } from 'react'
 import { add_barber } from '../../Api/Barber';
-import { getShop } from '../../Api/Shops';
+import { getShop, getcatalog } from '../../Api/Shops';
+import { useLocation } from 'react-router-dom';
 
 const Barber = () => {
+    const location = useLocation();
     const [formData, setFormData] = useState({
         shopId: "",
         name: "",
         phone: "",
-        hours: "",
+        startHour: "",
+        endHour: "",
         services: [],
         email: "",
         password: "",
         role: ""
     });
-    const [newService, setNewService] = useState({ name: '', price: 0, duration: 0 });
+    const [catalog, setCatalog] = useState([]);
 
     const slug = location.pathname.split('/')[1];
-    
+
     const getShopId = async () => {
-        const shop = await getShop(slug);
-        const id = shop._id;
-        setFormData((prevData) => ({ ...prevData, shopId: id }));
+        try {
+            const shop = await getShop(slug);
+            const id = shop._id;
+            setFormData((prevData) => ({ ...prevData, shopId: id }));
+        } catch (error) {
+            console.error('Error fetching shop ID:', error);
+        }
+    }
+
+    // FIXED: Ensure we use the correct ID reference
+    function updateServiceDuration(serviceId, newDuration) {
+        setFormData((prev) => ({
+            ...prev,
+            services: prev.services.map((s) =>
+                s.service === serviceId ? { ...s, duration: newDuration } : s
+            ),
+        }));
     }
 
     async function handleSubmit() {
@@ -28,12 +45,13 @@ const Barber = () => {
             await add_barber({
                 name: formData.name,
                 ph_number: formData.phone,
-                hours: formData.hours,
                 shopId: formData.shopId,
                 services: formData.services,
                 role: formData.role,
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
+                hours_start: formData.startHour,
+                hours_end: formData.endHour
             });
             alert("Barber added successfully!");
         } catch (error) {
@@ -41,23 +59,42 @@ const Barber = () => {
         }
     }
 
+    async function fetchServices() {
+        try {
+            const services = await getcatalog(formData.shopId);
+            setCatalog(services);
+
+            // Set default duration to 30 so the "-" button has something to subtract from
+            const defaultServices = services.map(item => ({
+                service: item._id,
+                duration: 0,
+            }));
+            setFormData(prev => ({ ...prev, services: defaultServices }));
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
+    }
+
     useEffect(() => {
         getShopId();
     }, []);
 
+    useEffect(() => {
+        if (formData.shopId) {
+            fetchServices();
+        }
+    }, [formData.shopId]);
+
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                
-                {/* Header */}
                 <div className="bg-gray-900 py-8 px-10 text-center">
                     <h2 className="text-3xl font-bold text-white tracking-tight">Add New Barber</h2>
                     <p className="text-gray-400 mt-2">Register a professional to your shop</p>
                 </div>
 
                 <div className="p-10 space-y-8">
-                    
-                    {/* Account Section */}
+                    {/* Credentials Section */}
                     <section>
                         <h3 className="text-sm font-bold text-amber-600 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Credentials</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -65,18 +102,18 @@ const Barber = () => {
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
                                 <input
                                     type="email"
+                                    value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    placeholder="barber@example.com"
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
                                 <input
                                     type="password"
+                                    value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    placeholder="••••••••"
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all outline-none"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                         </div>
@@ -88,126 +125,152 @@ const Barber = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
+                                    value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="John Doe"
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition-all outline-none"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
                                 <input
                                     type="tel"
+                                    value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    placeholder="+355 69..."
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition-all outline-none"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                         </div>
 
                         <div className="mb-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Working Hours</label>
-                            <input
-                                type="text"
-                                onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
-                                placeholder="e.g. Mon-Fri 09:00 - 21:00"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 transition-all outline-none"
-                            />
-                        </div>
-
-                        <div className="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300">
-                            <label className="block text-sm font-bold text-gray-700 mb-3">Assign Permissions</label>
-                            <div className="flex gap-6">
-                                <label className="flex items-center cursor-pointer group">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Working Hours</label>
+                            <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div className="flex-1">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Starts at</span>
                                     <input
-                                        type="radio"
-                                        name="role"
-                                        className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500"
-                                        onClick={() => setFormData({ ...formData, role: "barber_admin" })}
+                                        type="time"
+                                        value={formData.startHour}
+                                        onChange={(e) => setFormData({ ...formData, startHour: e.target.value })}
+                                        className="w-full bg-transparent text-sm font-bold text-gray-800 outline-none cursor-pointer"
                                     />
-                                    <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Shop Admin</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer group">
+                                </div>
+                                <div className="h-8 w-px bg-gray-300"></div>
+                                <div className="flex-1">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Ends at</span>
                                     <input
-                                        type="radio"
-                                        name="role"
-                                        className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500"
-                                        onClick={() => setFormData({ ...formData, role: "barber" })}
+                                        type="time"
+                                        value={formData.endHour}
+                                        onChange={(e) => setFormData({ ...formData, endHour: e.target.value })}
+                                        className="w-full bg-transparent text-sm font-bold text-gray-800 outline-none cursor-pointer"
                                     />
-                                    <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Standard Barber</span>
-                                </label>
+                                </div>
                             </div>
                         </div>
                     </section>
-
+                    {/* Assign Permissions / Role Section */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300">
+                        <label className="block text-sm font-bold text-gray-700 mb-3">Assign Permissions</label>
+                        <div className="flex gap-6">
+                            <label className="flex items-center cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    checked={formData.role === "barber_admin"}
+                                    onChange={() => setFormData({ ...formData, role: "barber_admin" })}
+                                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Shop Admin</span>
+                            </label>
+                            <label className="flex items-center cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="role"
+                                    checked={formData.role === "barber"}
+                                    onChange={() => setFormData({ ...formData, role: "barber" })}
+                                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">Standard Barber</span>
+                            </label>
+                        </div>
+                    </div>
                     {/* Services Section */}
                     <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                             <span className="bg-amber-100 text-amber-700 p-1.5 rounded-md mr-2">✂️</span>
-                            Offered Services
+                            Service Menu & Durations
                         </h3>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                            <input
-                                type="text"
-                                placeholder="Service (e.g. Fade)"
-                                value={newService.name}
-                                onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                            />
-                            <input
-                                type="number"
-                                placeholder="Price (€)"
-                                value={newService.price}
-                                onChange={(e) => setNewService({ ...newService, price: e.target.value })}
-                                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                            />
-                            <input
-                                type="number"
-                                placeholder="Min"
-                                value={newService.duration}
-                                onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-                                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                            />
-                        </div>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if (!newService.name) return;
-                                setFormData((prev) => ({ ...prev, services: [...prev.services, { ...newService }] }));
-                                setNewService({ name: '', price: 0, duration: 0 });
-                            }}
-                            className="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition-all text-sm mb-6 border border-gray-200"
-                        >
-                            + Add to Price List
-                        </button>
+                        <div className="space-y-4">
+                            {catalog.map((item) => {
+                                const currentService = formData.services.find(s => s.service === item._id);
+                                const isSelected = !!currentService;
 
-                        <div className="space-y-3">
-                            {formData.services && formData.services.length > 0 ? (
-                                formData.services.map((s, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
-                                        <div>
-                                            <p className="font-bold text-gray-800">{s.name}</p>
-                                            <p className="text-xs text-gray-500 font-medium">{s.price} Leke • {s.duration} Minutes</p>
+                                return (
+                                    <div
+                                        key={item._id}
+                                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all ${isSelected ? 'border-amber-200 bg-amber-50/30' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                                    >
+                                        <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            services: prev.services.filter(s => s.service !== item._id)
+                                                        }));
+                                                    } else {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            services: [...prev.services, {
+                                                                service: item._id,
+                                                                duration: 0,
+                                                            }]
+                                                        }));
+                                                    }
+                                                }}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSelected ? 'bg-amber-600' : 'bg-gray-300'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSelected ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+
+                                            <div>
+                                                <p className={`font-bold ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{item.service}</p>
+                                                <p className="text-xs text-gray-400">{item.price} Leke</p>
+                                            </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData((prev) => ({ ...prev, services: prev.services.filter((_, i) => i !== idx) }))}
-                                            className="text-red-400 hover:text-red-600 text-xs font-bold uppercase"
-                                        >
-                                            Delete
-                                        </button>
+
+                                        {isSelected && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center bg-white border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateServiceDuration(item._id, Math.max(5, currentService.duration - 5))}
+                                                        className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
+                                                    >–</button>
+                                                    <input
+                                                        type="number"
+                                                        readOnly
+                                                        value={currentService.duration}
+                                                        className="w-10 text-center text-sm font-bold text-gray-800 focus:outline-none bg-transparent"
+                                                    />
+                                                    <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
+                                                    <button
+                                                        type="button"
+
+                                                        onClick={() => updateServiceDuration(item._id, currentService.duration + 5)}
+                                                        className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
+                                                    >+</button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-sm text-gray-400 italic py-4">No services defined yet.</p>
-                            )}
+                                );
+                            })}
                         </div>
                     </section>
 
-                    {/* Submit Button */}
                     <button
                         onClick={handleSubmit}
                         className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-amber-200 transition-all transform active:scale-[0.98]"

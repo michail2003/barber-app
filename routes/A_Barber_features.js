@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User'); 
-const { Barber } = require('../models/barber');
+const  Barber  = require('../models/barber');
 const { authMiddleware, allowRoles } = require('../middleware/auth_middleware');
 
 router.get('/shop-staff/:shopId',authMiddleware,allowRoles('barber_admin') ,async (req, res) => {
@@ -10,7 +10,7 @@ router.get('/shop-staff/:shopId',authMiddleware,allowRoles('barber_admin') ,asyn
             .populate('userId', 'name ph_number email role'); 
         res.json(staff);
     } catch (err) {
-        res.status(500).json({ message: "Error fetching staff list" });
+        res.status(500).json({ message:err.message });
     }
 });
 
@@ -18,19 +18,14 @@ router.get('/shop-staff/:shopId',authMiddleware,allowRoles('barber_admin') ,asyn
 // @desc    Update Name, Phone, Hours, and Services
 router.put('/update-staff/:barberId' ,async (req, res) => {
     try {
-        const { name, ph_number, hours,services,role } = req.body;
+        const { name, ph_number, hours_start, hours_end, services, role } = req.body;
 
         const barber = await Barber.findById(req.params.barberId);
         if (!barber) return res.status(404).json({ message: "Barber profile not found" });
 
-        // 1. Update Barber Collection
-        barber.hours = hours || hours
-        barber.services = services || services
-
-        await barber.save();
 
         // 2. Update User Collection (Security: Only name and phone)
-        await User.findByIdAndUpdate(barber.userId, { name, ph_number, role });
+        await User.findByIdAndUpdate(barber.userId, { name, ph_number, role,hours_start,hours_end });
 
         res.json({ message: "Staff updated successfully" });
     } catch (err) {

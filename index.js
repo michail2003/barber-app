@@ -8,6 +8,7 @@ const reservation = require('./routes/reservation');
 const User = require('./routes/auth');
 const feature = require('./routes/A_Barber_features')
 const Services = require('./routes/services')
+const testing_new_routes = require('./routes/testing_new_routes')
 const connectDB = require('./config/db');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use('/reservations', reservation);
 app.use('/user-managment',User);
 app.use('/staff-managment',feature);
 app.use('/managing-services',Services);
+app.use('/testing',testing_new_routes);
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

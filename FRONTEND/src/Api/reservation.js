@@ -23,7 +23,7 @@ async function barber_reservations(barberid) {
 
 async function barbers_available(shop,data) {
     try {
-        const response = await axios.post(`${Api}/${shop}/all/reservations`,data);
+        const response = await axios.post(`${Api}/${shop}/available-barbers`,data);
         return response.data
     } catch (error) {
         console.error('Error getting data from server:', error);

@@ -10,6 +10,9 @@ const ServiceCatalog = new mongoose.Schema(
     },
     price:{
       type: Number
+    },
+    service_name:{
+      type: String
     }
   }
 )
