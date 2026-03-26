@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get_barber_list, barber_edit, barber_exit } from '../../Api/Barber';
+import { getcatalog } from '../../Api/Shops';
 
 const StaffDetails = () => {
     const [staff, setStaff] = useState([]);
@@ -8,12 +9,15 @@ const StaffDetails = () => {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isServiceEditOpen, setIsServiceEditOpen] = useState(false);
+    const [catalog, setCatalog] = useState([]);
 
     const navigate = useNavigate();
     const shopId = localStorage.getItem('shop');
 
     useEffect(() => {
-        if (shopId) loadData();
+        if (shopId) 
+            loadData();
+        fetchServices();
     }, [shopId]);
 
     const loadData = async () => {
@@ -67,6 +71,22 @@ const StaffDetails = () => {
         }
     };
 
+    async function fetchServices() {
+        try {
+            const services = await getcatalog(shopId);
+            setCatalog(services);
+
+            // Set default duration to 30 so the "-" button has something to subtract from
+            // const defaultServices = services.map(item => ({
+            //     service: item._id,
+            //     duration: 0,
+            // }));
+            // setFormData(prev => ({ ...prev, services: defaultServices }));
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
+    }
+    console.log(staff);
     return (
         <div className="min-h-screen bg-[#F8F9FB] p-4 md:p-12">
             <div className="max-w-6xl mx-auto">
@@ -223,84 +243,81 @@ const StaffDetails = () => {
                 </div>
             )}
             {isServiceEditOpen && selectedBarber && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto">
-                    <div className="border-t border-gray-100 pt-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                Services Menu
-                            </h3>
-                            <button
+                <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                        <span className="bg-amber-100 text-amber-700 p-1.5 rounded-md mr-2">✂️</span>
+                        Service Menu & Durations
+                    </h3>
 
-                                className="text-[10px] font-black text-indigo-600 uppercase border-2 border-indigo-100 px-4 py-1.5 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-all flex items-center gap-2"
-                            >
-                                <span>+</span> Add Service
-                            </button>
-                        </div>
+                    <div className="space-y-4">
+                        {catalog.map((item) => {
+                            const currentService = formData.services.find(s => s.service === item._id);
+                            const isSelected = !!currentService;
 
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                            {selectedBarber.services.map((service, index) => (
-                                <div key={index} className="flex flex-col sm:flex-row items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 group">
-                                    {/* Service Name Input */}
-                                    <div className="flex-1 w-full">
-                                        <input
-                                            placeholder="Service Name"
-                                            className="w-full bg-white border-none rounded-xl p-2.5 text-sm font-bold shadow-sm focus:ring-2 focus:ring-indigo-500"
-                                            value={service.name || service.service?.service || ""}
-                                            onChange={(e) => handleServiceChange(index, 'name', e.target.value)}
-                                        />
-                                    </div>
-
-                                    {/* Price and Duration Controls */}
-                                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                                        <div className="relative flex-1 sm:w-24">
-                                            <input
-                                                type="number"
-                                                placeholder="Price"
-                                                className="w-full bg-white border-none rounded-xl p-2.5 text-sm font-black text-indigo-600 shadow-sm text-center"
-                                                value={service.price || service.service?.price || ""}
-                                                onChange={(e) => handleServiceChange(index, 'price', e.target.value)}
-                                            />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-300">€</span>
-                                        </div>
-
-                                        {/* Duration Stepper */}
-                                        <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                            <button
-                                                onClick={() => handleServiceDuration(index, (service.duration || 0) - 5)}
-                                                className="px-3 py-2 hover:bg-gray-50 text-gray-400 font-bold transition-colors"
-                                            >–</button>
-                                            <div className="px-1 text-center min-w-[45px]">
-                                                <span className="text-sm font-black text-gray-800">{service.duration || 0}</span>
-                                                <span className="text-[7px] block font-black text-gray-300 -mt-1 uppercase">Min</span>
-                                            </div>
-                                            <button
-                                                onClick={() => handleServiceDuration(index, (service.duration || 0) + 5)}
-                                                className="px-3 py-2 hover:bg-gray-50 text-gray-400 font-bold transition-colors"
-                                            >+</button>
-                                        </div>
-
-                                        {/* Remove Button */}
+                            return (
+                                <div
+                                    key={item._id}
+                                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all ${isSelected ? 'border-amber-200 bg-amber-50/30' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                                >
+                                    <div className="flex items-center gap-4 mb-3 sm:mb-0">
                                         <button
-                                            onClick={() => removeService(index)}
-                                            className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                            title="Remove Service"
+                                            type="button"
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        services: prev.services.filter(s => s.service !== item._id)
+                                                    }));
+                                                } else {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        services: [...prev.services, {
+                                                            service: item._id,
+                                                            duration: 0,
+                                                        }]
+                                                    }));
+                                                }
+                                            }}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSelected ? 'bg-amber-600' : 'bg-gray-300'}`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSelected ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
-                                    </div>
-                                </div>
-                            ))}
 
-                            {selectedBarber.services.length === 0 && (
-                                <div className="text-center py-8 border-2 border-dashed border-gray-100 rounded-[2rem]">
-                                    <p className="text-gray-400 text-sm font-medium">No services assigned. Click "Add Service" to start.</p>
+                                        <div>
+                                            <p className={`font-bold ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{item.service}</p>
+                                            <p className="text-xs text-gray-400">{item.price} Leke</p>
+                                        </div>
+                                    </div>
+
+                                    {isSelected && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center bg-white border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateServiceDuration(item._id, Math.max(5, currentService.duration - 5))}
+                                                    className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
+                                                >–</button>
+                                                <input
+                                                    type="number"
+                                                    readOnly
+                                                    value={currentService.duration}
+                                                    className="w-10 text-center text-sm font-bold text-gray-800 focus:outline-none bg-transparent"
+                                                />
+                                                <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
+                                                <button
+                                                    type="button"
+
+                                                    onClick={() => updateServiceDuration(item._id, currentService.duration + 5)}
+                                                    className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
+                                                >+</button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            );
+                        })}
                     </div>
-                </div>
+                </section>
             )}
         </div>
     );

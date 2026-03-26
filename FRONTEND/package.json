@@ -25,10 +25,10 @@
     "jwt-decode": "^4.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^7.10.1",
     "router-dom": "^3.0.3",
-    "tailwind": "^4.0.0",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

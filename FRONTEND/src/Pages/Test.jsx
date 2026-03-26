@@ -1,7 +1,7 @@
 import React, { use, useEffect, useState } from 'react';
 import dayjs from 'dayjs'; // Import dayjs
 import { getcatalog, getbarbers } from '../Api/Shops';
-import { barbers_available } from '../Api/reservation';
+import { barbers_available, reservation } from '../Api/reservation';
 import TimePicker from '../components/TimePicker';
 
 const BarberShopBooking = () => {
@@ -13,7 +13,10 @@ const BarberShopBooking = () => {
     const [catalog, setCatalog] = useState([]);
     const [availability, setAvailability] = useState(null);
     const [Barbers, setBarbers] = useState([]);
+    const [Shop, setShop] = useState({});
     const finalOutput = dayjs(`${selectedDate}${selectedTime}`).format('YYYY-MM-DDTHH:mm:ss');
+
+    const slug = window.location.pathname.substring(1);
 
     const fetchCatalog = async () => {
         try {
@@ -24,9 +27,20 @@ const BarberShopBooking = () => {
             console.error('Failed to fetch catalog:', error);
         }
     };
+
+    const fetchShop = async () => {
+        try {
+            const data = await getShop(slug);
+            setShop(data);
+        }
+        catch (error) {
+            console.error('Failed to fetch shop:', error);
+        }
+    };
+
+
     const fetchBarbers = async () => {
         try {
-            const slug = "Elite Barber Shop-725";
             const barbers = await getbarbers(slug);
             setBarbers(barbers);
             setAvailability(availability);
@@ -35,9 +49,25 @@ const BarberShopBooking = () => {
         }
     };
 
+    async function handleReservation() {
+        await reservation({
+            barberId: selectedBarber.id,
+            serviceId: selectedServices,
+            start: finalOutput,
+            customer_name: 'John Doe', // Replace with actual customer name input
+            customer_phone: '1234567890' // Replace with actual customer phone input,
+        })
+            .then(() => {
+                alert('Reservation successful');
+            })
+            .catch((error) => {
+                alert(`is booked ${error}`)
+            });
+    }
+
     const barber_availability = async () => {
         try {
-            const shop = "694fc3829dee317c7c722725";
+            const shop = Shop._id;
             const data = {
                 start: finalOutput,
                 servicesID: selectedServices
@@ -82,11 +112,11 @@ const BarberShopBooking = () => {
         .reduce((sum, s) => sum + Number(s.price), 0);
 
     const isStepComplete = selectedServices.length > 0 && selectedDate;
-    console.log(selectedBarber);
 
     useEffect(() => {
         fetchCatalog();
         fetchBarbers();
+        fetchShop();
     }, []);
 
     useEffect(() => {
@@ -202,10 +232,10 @@ const BarberShopBooking = () => {
                                                 }
                                             }}
                                             className={`group relative p-4 rounded-3xl border-2 transition-all flex items-center gap-4 ${!isBusy
-                                                    ? selectedBarber?.id === barber.id
-                                                        ? 'border-indigo-600 bg-indigo-50 shadow-md'
-                                                        : 'border-transparent bg-gray-50 hover:border-indigo-400 cursor-pointer shadow-sm'
-                                                    : 'border-gray-50 bg-white opacity-80'
+                                                ? selectedBarber?.id === barber.id
+                                                    ? 'border-indigo-600 bg-indigo-50 shadow-md'
+                                                    : 'border-transparent bg-gray-50 hover:border-indigo-400 cursor-pointer shadow-sm'
+                                                : 'border-gray-50 bg-white opacity-80'
                                                 }`}
                                         >
                                             <div className="relative">
@@ -301,6 +331,7 @@ const BarberShopBooking = () => {
 
                             <button
                                 disabled={!selectedBarber || selectedServices.length === 0}
+                                onClick={()=> handleReservation}
                                 className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest transition-all ${selectedBarber && selectedServices.length > 0
                                     ? 'bg-white text-indigo-900 hover:bg-indigo-50 shadow-lg'
                                     : 'bg-indigo-800 text-indigo-400 cursor-not-allowed'

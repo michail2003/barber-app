@@ -1,38 +1,42 @@
 const mongoose = require('mongoose');
 
 const RequestSchema = new mongoose.Schema({
+  userid: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
   barberId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Barber",
     required: true
   },
-  userId:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
-  receiverId:{
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  },
-  role:{
-    type: String,
-    enum: ['barber','user'],
-    required: true
-  },
-  serviceId: [{
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  }],
-  start: { type: Date, required: true },
-  end: { type: Date, required: true },
+
+  services: [
+    {
+      serviceID:{ type: String, required: true },
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+      duration: { type: Number, required: true } // in minutes
+    }
+  ],
+
+  start: { type: String, required: true },
+
+  end: { type: String, required: true },
+
+  total_price: { type: Number, required: true },
+
+  duration: { type: Number, required: true },
+
   status: {
     type: String,
-    enum: ['accepted','cancelled','modified','pending'],
+    enum: ['accepted', 'cancelled', 'modified', 'pending'],
     default: 'pending'
   }
 }, { timestamps: true });
 
+
 const Request = mongoose.model("Request", RequestSchema);
 
-module.exports =  {Request} ;
+module.exports = { Request };

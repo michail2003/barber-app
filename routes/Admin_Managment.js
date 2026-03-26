@@ -46,11 +46,11 @@ router.post(
             const allServicesValid = services.every(service =>
                 shopServicesIds.includes(service.service.toString())
             );
-            
+
             if (!allServicesValid) {
                 return res.status(400).json({ message: 'you must add services from shop' });
             }
-            
+
             const full_service_list = services.map(s => ({
                 service: s.service,
                 service_name: shop.services.find(ss => ss._id.toString() === s.service.toString()).service_name,
@@ -85,7 +85,7 @@ router.post(
                 shopId,
                 hours_start,
                 hours_end,
-                services : full_service_list
+                services: full_service_list
             });
 
             res.status(201).json({
@@ -99,52 +99,26 @@ router.post(
     }
 );
 
-router.get('/barber-details/:id', async (req, res) => {
+router.get('/all-shops/overview', async (req, res) => {
     try {
-        const barberId = req.params.id;
-        const barber = await Barber.findById(barberId)
-            .populate('userId', 'name ph_number')
-        if (!barber) {
-            return res.status(404).json({ message: 'Barber Not Found' });
-        }
-        res.json(barber);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error', error: err.message });
-    }
-});
-
-router.get('/:slug', async (req, res) => {
-    try {
-        const slug = req.params.slug;
-        const shop = await Barber_Shop.findOne({ slug: slug });
-        if (!shop) {
-            return res.status(404).json({ message: 'Barber shop not found' });
-        }
-        res.json(shop);
+        const shops = await Barber_Shop.find({}, 'name slug logo_url address');
+        res.json(shops);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-router.get('/:slug/barbers', async (req, res) => {
-    try {
-        const slug = req.params.slug;
-        const shop = await Barber_Shop.findOne({ slug: slug });
-        if (!shop) {
-            return res.status(404).json({ message: 'Barber shop not found' });
+router.delete('/permanent-delete/:barbershop', authMiddleware,
+    allowRoles('admin'), async (req, res) => {
+        const shopID = req.params.barbershop;
+        try {
+            const shop = await Barber_Shop.findByIdAndDelete(shopID)
+            if (!shop) {
+                return res.status(404).json({ message: "barber shop not found" });
+            }
+            return res.status(200).json({ message: `barber shop ${shop.name} was removed permanently from db` });
+        } catch (error) {
+            res.status(500).json({ message: "Error removing barbershop", error: error.message });
         }
-        const barbers = await Barber.find({ shopId: shop._id.toString() })
-            .populate('userId', 'name ph_number');
-        res.status(200).json(
-            barbers.map(barber => ({
-                id: barber._id,
-                name: barber.userId.name,
-            }))
-        );
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
-
-
+    })
 module.exports = router;

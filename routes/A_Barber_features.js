@@ -25,7 +25,7 @@ router.put('/update-staff/:barberId' ,async (req, res) => {
 
 
         // 2. Update User Collection (Security: Only name and phone)
-        await User.findByIdAndUpdate(barber.userId, { name, ph_number, role,hours_start,hours_end });
+        await User.findByIdAndUpdate(barber.userId, { name, ph_number, role,hours_start,hours_end, services });
 
         res.json({ message: "Staff updated successfully" });
     } catch (err) {

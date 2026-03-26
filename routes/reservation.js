@@ -4,12 +4,9 @@ const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 const Barber = require('../models/barber');
-const Barbershop = require('../models/Shop');
 const { Reservation } = require('../models/Reservation');
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware');
-const Shop = require('../models/Shop');
-const barber = require('../models/barber');
-const service = require('../models/service');
+const User = require('../models/User');
 
 function isOverlapping(start1, end1, start2, end2) {
   // Day.js handles the string-to-date conversion automatically here
@@ -17,7 +14,7 @@ function isOverlapping(start1, end1, start2, end2) {
     dayjs(start2).valueOf() < dayjs(end1).valueOf();
 };
 
-function next_rsv_time(req_start,req_duration,req_end,reservations){
+function next_rsv_time(req_start, req_duration, req_end, reservations) {
   let next_start = dayjs(req_start);
   let next_end = dayjs(req_end);
   let found_slot = false;
@@ -42,31 +39,39 @@ function next_rsv_time(req_start,req_duration,req_end,reservations){
 router.post('/reserve', async (req, res) => {
   try {
     const {
+      userid,
       barberId,
-      serviceId,
+      services,
       start,
-      customer_name,
-      customer_phone,
-      status
     } = req.body;
 
-    // 1️⃣ Find barber with populated reservations
+    const userVerification = await User.findById(userid);
+    if (!userid || !userVerification) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const barber = await Barber.findById(barberId).populate('reservations');
     if (!barber) {
       return res.status(404).json({ message: 'Barber not found' });
     }
-
-    // 2️⃣ Find service inside barber
-    const service = barber.services.id(serviceId);
-    if (!service) {
-      return res.status(400).json({ message: 'Invalid service' });
+    const serviceDetails = barber.services
+      .filter(item => services.includes(item.service.toString()))
+      .map(item => ({
+        name: item.service_name,
+        price: item.price,
+        duration: item.duration
+      }));
+    if (serviceDetails.length === 0) {
+      return res.status(400).json({ message: 'Requested services not offered by this barber' });
     }
 
-    // 3️⃣ Parse start & calculate end
-    const startTime = dayjs(start);
-    const endTime = startTime.add(service.duration, 'minute');
+    // 2. Calculate the total duration
+    const servicesTotalDuration = serviceDetails.reduce((acc, s) => acc + s.duration, 0);
+    const servicesTotalPrice = serviceDetails.reduce((total, s) => total + s.price, 0);
 
-    // ❌ Prevent past bookings
+    const startTime = dayjs(start);
+    const endTime = startTime.add(servicesTotalDuration, 'minute');
+
     if (startTime.isBefore(dayjs())) {
       return res.status(400).json({ message: 'Cannot book in the past' });
     }
@@ -90,13 +95,14 @@ router.post('/reserve', async (req, res) => {
 
     // 6️⃣ Create reservation
     const reservation = await Reservation.create({
+      userid,
       barberId,
-      serviceId,
+      services,
       start: startTime.format("YYYY-MM-DDTHH:mm:ss"),
       end: endTime.format("YYYY-MM-DDTHH:mm:ss"),
-      customer_name,
-      customer_phone,
-      status: 'confirmed'
+      status: 'confirmed',
+      total_price: servicesTotalPrice,
+      duration: servicesTotalDuration
     });
 
     // 7️⃣ Link reservation to barber
@@ -178,33 +184,33 @@ router.post('/:barbershopID/available-barbers', async (req, res) => {
       return true; // No overlaps, barber is available
     });
 
-      const busy_barbers_with_next_slot = busy.map(barber => {
-        const { next_start, next_end } = next_rsv_time(
-          barber.startTime,
-          barber.totalDuration,
-          barber.endTime,
-          barber.Barber.reservations
-        );
-        return {
-          ...barber,
-          next_available_start: next_start,
-          next_available_end: next_end,
-        };
-      }
+    const busy_barbers_with_next_slot = busy.map(barber => {
+      const { next_start, next_end } = next_rsv_time(
+        barber.startTime,
+        barber.totalDuration,
+        barber.endTime,
+        barber.Barber.reservations
       );
+      return {
+        ...barber,
+        next_available_start: next_start,
+        next_available_end: next_end,
+      };
+    }
+    );
     return res.status(200).json({
       "available": availableBarbers.map(b => ({
         id: b.Barber._id,
         status: "available",
-        name:b.Barber.userId.name,
-        })),
+        name: b.Barber.userId.name,
+      })),
       "busy": busy_barbers_with_next_slot.map(b => ({
         id: b.Barber._id,
         status: "busy",
         name: b.Barber.userId.name,
         next_available_start: b.next_available_start,
         next_available_end: b.next_available_end,
-        }))
+      }))
     });
   } catch (error) {
     // Added 'return' here to prevent the "Headers already sent" error if something goes wrong

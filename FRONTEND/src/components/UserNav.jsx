@@ -1,6 +1,6 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ProtectedButton } from "./ProtectedButton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 
 export function UserNav() {
   const navigate = useNavigate();
@@ -9,24 +9,6 @@ export function UserNav() {
   // State to handle local storage data
   const [userId, setUserId] = useState(localStorage.getItem('token'));
   const [userName, setUserName] = useState(localStorage.getItem('name') || 'User');
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  // Sync state with localStorage changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setUserId(localStorage.getItem('id'));
-      setUserName(localStorage.getItem('userName') || 'User');
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -43,9 +25,15 @@ export function UserNav() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
     </svg>
   );
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedName = localStorage.getItem('name');
+    setUserId(storedToken);
+    setUserName(storedName || 'User');
+  }, [location]);
   return (
-    <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 px-6 py-4 
-      ${isScrolled ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-gray-100' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 px-6 py-4`}>
 
       <div className="max-w-7xl mx-auto flex items-center justify-between">
 

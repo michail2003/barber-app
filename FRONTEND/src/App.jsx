@@ -5,22 +5,29 @@ import Home from "./Pages/Home";
 import Dashboard from "./Pages/Admin/Dashboard";
 import BarberShop from "./Pages/Shop/Barber_Shop";
 import Barber from "./Pages/Shop/Barber";
-import StaffDetails from "./Pages/Shop/staffDetails";
+import StaffDetails from "./Pages/Shop/StaffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
 import Test from './Pages/Test'
 import Reservations from "./Pages/Shop/Reservations";
+import Request_window from "./components/Request_window";
 import axios from "axios";
+import User_not_found from "./components/User_not_found";
+import { use, useEffect,useState } from "react";
 
 function App() {
   const token = localStorage.getItem('token');
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
+
   return (
     <>
+    <User_not_found />
       <UserNav />
       <br />
+      <br />
+      <Request_window />
       <Routes>
 
         <Route path='/' element={<Home />} />
@@ -57,6 +64,7 @@ function App() {
       </Routes>
     </>
   )
+
 }
 
 export default App

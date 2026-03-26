@@ -37,10 +37,17 @@ const BarberSchema = new mongoose.Schema({
     type:String,
   },
   services: [BarberServiceSchema],
+
   reservations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Reservation"
   }],
+
+    requests: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Request"
+  }],
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model("Barber", BarberSchema);
