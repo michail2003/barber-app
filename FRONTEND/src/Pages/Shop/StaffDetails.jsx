@@ -74,19 +74,17 @@ const StaffDetails = () => {
     async function fetchServices() {
         try {
             const services = await getcatalog(shopId);
-            setCatalog(services);
-
-            // Set default duration to 30 so the "-" button has something to subtract from
-            // const defaultServices = services.map(item => ({
-            //     service: item._id,
-            //     duration: 0,
-            // }));
-            // setFormData(prev => ({ ...prev, services: defaultServices }));
+            const formattedServices = services.map(s => ({
+                _id: s._id,
+                service: s.service,
+                price: s.price
+            }));
+            setCatalog(formattedServices);
         } catch (error) {
             console.error('Error fetching services:', error);
         }
     }
-    console.log(staff);
+    console.log("Selected Barber:", selectedBarber);
     return (
         <div className="min-h-screen bg-[#F8F9FB] p-4 md:p-12">
             <div className="max-w-6xl mx-auto">
@@ -251,9 +249,8 @@ const StaffDetails = () => {
 
                     <div className="space-y-4">
                         {catalog.map((item) => {
-                            const currentService = formData.services.find(s => s.service === item._id);
-                            const isSelected = !!currentService;
-
+                            const isSelected = selectedBarber.services.some(s => s.service === item._id);
+                            const currentService = selectedBarber.services.find(s => s.service === item._id);
                             return (
                                 <div
                                     key={item._id}
@@ -262,22 +259,22 @@ const StaffDetails = () => {
                                     <div className="flex items-center gap-4 mb-3 sm:mb-0">
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                if (isSelected) {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        services: prev.services.filter(s => s.service !== item._id)
-                                                    }));
-                                                } else {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        services: [...prev.services, {
-                                                            service: item._id,
-                                                            duration: 0,
-                                                        }]
-                                                    }));
-                                                }
-                                            }}
+                                            // onClick={() => {
+                                            //     if (isSelected) {
+                                            //         setFormData(prev => ({
+                                            //             ...prev,
+                                            //             services: prev.services.filter(s => s.service !== item._id)
+                                            //         }));
+                                            //     } else {
+                                            //         setFormData(prev => ({
+                                            //             ...prev,
+                                            //             services: [...prev.services, {
+                                            //                 service: item._id,
+                                            //                 duration: 0,
+                                            //             }]
+                                            //         }));
+                                            //     }
+                                            // }}
                                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSelected ? 'bg-amber-600' : 'bg-gray-300'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSelected ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -311,7 +308,7 @@ const StaffDetails = () => {
                                                     className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
                                                 >+</button>
                                             </div>
-                                        </div>
+                                        </div>  
                                     )}
                                 </div>
                             );
