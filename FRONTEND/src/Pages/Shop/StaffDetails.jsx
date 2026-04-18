@@ -15,7 +15,7 @@ const StaffDetails = () => {
     const shopId = localStorage.getItem('shop');
 
     useEffect(() => {
-        if (shopId) 
+        if (shopId)
             loadData();
         fetchServices();
     }, [shopId]);
@@ -117,7 +117,6 @@ const StaffDetails = () => {
                                                 </div>
                                                 <div>
                                                     <span className="block font-bold text-gray-800 text-lg md:text-base">{barber.userId?.name}</span>
-                                                    <span className="md:hidden text-xs font-bold text-indigo-500 uppercase tracking-wider">{barber.userId?.role?.replace('_', ' ')}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -191,11 +190,15 @@ const StaffDetails = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
                                 <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">Full Name</label>
-                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500" value={selectedBarber.userId.name} onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, name: e.target.value } })} />
+                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
+                                    value={selectedBarber.userId.name}
+                                    onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, name: e.target.value } })} />
                             </div>
                             <div>
                                 <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">Phone</label>
-                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500" value={selectedBarber.userId.ph_number} onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, ph_number: e.target.value } })} />
+                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
+                                    value={selectedBarber.userId.ph_number}
+                                    onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, ph_number: e.target.value } })} />
                             </div>
 
                             {/* START/END HOUR LOGIC */}
@@ -241,82 +244,78 @@ const StaffDetails = () => {
                 </div>
             )}
             {isServiceEditOpen && selectedBarber && (
-                <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                        <span className="bg-amber-100 text-amber-700 p-1.5 rounded-md mr-2">✂️</span>
-                        Service Menu & Durations
-                    </h3>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto" onClick={()=> setIsServiceEditOpen(false)}>
+                    <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-6 flex items-center text-indigo-700">
+                            <span className="bg-indigo-100 p-1.5 rounded-md mr-2">✂️</span>
+                            Service Menu & Durations
+                        </h3>
 
-                    <div className="space-y-4">
-                        {catalog.map((item) => {
-                            const isSelected = selectedBarber.services.some(s => s.service === item._id);
-                            const currentService = selectedBarber.services.find(s => s.service === item._id);
-                            return (
-                                <div
-                                    key={item._id}
-                                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all ${isSelected ? 'border-amber-200 bg-amber-50/30' : 'border-gray-100 bg-gray-50 opacity-60'}`}
-                                >
-                                    <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                                        <button
-                                            type="button"
-                                            // onClick={() => {
-                                            //     if (isSelected) {
-                                            //         setFormData(prev => ({
-                                            //             ...prev,
-                                            //             services: prev.services.filter(s => s.service !== item._id)
-                                            //         }));
-                                            //     } else {
-                                            //         setFormData(prev => ({
-                                            //             ...prev,
-                                            //             services: [...prev.services, {
-                                            //                 service: item._id,
-                                            //                 duration: 0,
-                                            //             }]
-                                            //         }));
-                                            //     }
-                                            // }}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSelected ? 'bg-amber-600' : 'bg-gray-300'}`}
-                                        >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSelected ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
+                        <div className="space-y-4">
+                            {catalog.map((item) => {
+                                const isSelected = selectedBarber.services.some(s => s.service === item._id);
+                                const currentService = selectedBarber.services.find(s => s.service === item._id);
+                                return (
+                                    <div
+                                        key={item._id}
+                                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all ${isSelected ? 'border-indigo-700 bg-indigo-50/30' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                                    >
+                                        <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setSelectedBarber({ ...selectedBarber, services: selectedBarber.services.filter(s => s.service !== item._id) });
+                                                    } else {
+                                                        setSelectedBarber({ ...selectedBarber, services: [...selectedBarber.services, { service: item._id, duration: 30 }] });
+                                                    }
+                                                }}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSelected ? 'bg-indigo-800' : 'bg-gray-300'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSelected ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
 
-                                        <div>
-                                            <p className={`font-bold ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{item.service}</p>
-                                            <p className="text-xs text-gray-400">{item.price} Leke</p>
-                                        </div>
-                                    </div>
-
-                                    {isSelected && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center bg-white border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => updateServiceDuration(item._id, Math.max(5, currentService.duration - 5))}
-                                                    className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
-                                                >–</button>
-                                                <input
-                                                    type="number"
-                                                    readOnly
-                                                    value={currentService.duration}
-                                                    className="w-10 text-center text-sm font-bold text-gray-800 focus:outline-none bg-transparent"
-                                                />
-                                                <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
-                                                <button
-                                                    type="button"
-
-                                                    onClick={() => updateServiceDuration(item._id, currentService.duration + 5)}
-                                                    className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold"
-                                                >+</button>
+                                            <div>
+                                                <p className={`font-bold ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{item.service}</p>
+                                                <p className="text-xs text-gray-400">{item.price} Leke</p>
                                             </div>
-                                        </div>  
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-            )}
-        </div>
+                                        </div>
+
+                                        {
+                                            isSelected && (
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center bg-white border border-indigo-200 rounded-lg overflow-hidden shadow-sm">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleServiceDuration(selectedBarber.services.findIndex(s => s.service === item._id), currentService.duration - 5)}
+                                                            className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold"
+                                                        >–</button>
+                                                        <input
+                                                            type="number"
+                                                            readOnly
+                                                            value={currentService.duration}
+                                                            onChange
+                                                            className="w-10 text-center text-sm font-bold text-gray-800 focus:outline-none bg-transparent"
+                                                        />
+                                                        <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleServiceDuration(selectedBarber.services.findIndex(s => s.service === item._id), currentService.duration + 5)}
+                                                            className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold"
+                                                        >+</button>
+                                                    </div>
+                                                </div>
+                                            )
+                                        }
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                </div>
+            )
+            }
+        </div >
     );
 };
 

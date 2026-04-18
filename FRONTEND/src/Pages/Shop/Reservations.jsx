@@ -45,6 +45,7 @@ const Reservations = () => {
             minute: '2-digit'
         });
     };
+    console.log(reservimet);    
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen font-sans relative">
             <div className="max-w-6xl mx-auto">

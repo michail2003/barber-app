@@ -119,21 +119,33 @@ router.post('/reserve', async (req, res) => {
   }
 });
 
-router.get('/:barberID/reservations', authMiddleware, allowRoles('barber', 'barber_admin'), async (req, res) => {
+router.get('/:barberID/reservations', authMiddleware, async (req, res) => {
   try {
-    const barberID = req.params.barberID
-    const reservations = await Barber.findById(barberID).populate('reservations', 'start end status customer_phone customer_name');
+    const { barberID } = req.params;
+    const { start, end } = req.query;
 
-    if (!reservations) {
-      return res.status(404).json({ message: "reservation not found" })
+    let filter = { barberId: barberID };
+
+    if (start && end) {
+      const Requestedstart = dayjs(start).startOf("day").toDate();
+      const Requestedend = dayjs(end).endOf("day").toDate();
+
+      filter.start = { $lte: Requestedend };
+      filter.end = { $gte: Requestedstart };
     }
-    return res.status(200).json(reservations['reservations'])
+
+    const reservations = await Reservation.find(filter);
+
+    if (reservations.length === 0) {
+      return res.status(404).json({ message: "No reservations found" });
+    }
+
+    return res.status(200).json({ reservations });
 
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    return res.status(500).json({ message: error.message });
   }
-
-})
+});
 
 router.post('/:barbershopID/available-barbers', async (req, res) => {
   try {
