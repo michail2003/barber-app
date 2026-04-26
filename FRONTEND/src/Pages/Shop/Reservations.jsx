@@ -13,8 +13,9 @@ const Reservations = () => {
     const fetchreservations = async () => {
         try {
             const data = await barber_reservations(id);
-            // Ensure data is an array before setting state
-            setReservimet(data);
+            // Handle both direct array and object with reservations property
+            const reservations = Array.isArray(data) ? data : data.reservations || [];
+            setReservimet(reservations);
         } catch (e) {
             console.error('Failed to fetch data:', e);
         }
@@ -28,24 +29,27 @@ const Reservations = () => {
         return 'bg-blue-100 text-blue-700'; // Default
     };
 
-    // Grouping Logic: Organized by Day
-    const grouped = reservimet.reduce((acc, res) => {
+    // Helper: Format Time (24h format)
+    const formatTime = (dateString) => {
+        return new Date(dateString).toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    };
+
+    // Group reservations by day (sorted by date, newest first)
+    const sortedReservations = [...reservimet].sort((a, b) => new Date(b.start) - new Date(a.start));
+    const grouped = sortedReservations.length > 0 ? sortedReservations.reduce((acc, res) => {
         const day = new Date(res.start).toLocaleDateString('en-GB', {
             weekday: 'long', day: 'numeric', month: 'long'
         });
         if (!acc[day]) acc[day] = [];
         acc[day].push(res);
         return acc;
-    }, {});
+    }, {}) : {};
 
-    // Helper: Format Time (HH:MM)
-    const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-    console.log(reservimet);    
+    console.log("reserbimet", reservimet);
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen font-sans relative">
             <div className="max-w-6xl mx-auto">
@@ -74,11 +78,11 @@ const Reservations = () => {
                                 <div className="h-[1px] w-full bg-gray-200"></div>
                             </div>
 
-                            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className=""> {/* Removed background/border here to allow rows to 'float' */}
                                 {/* Mobile View (Card List) */}
-                                <div className="block md:hidden divide-y divide-gray-100">
+                                <div className="block md:hidden divide-y divide-gray-100 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     {grouped[day].map((res, idx) => (
-                                        <div key={idx} className="p-6 space-y-4">
+                                        <div key={idx} className="p-6 space-y-5">
                                             <div className="flex justify-between items-start">
                                                 <div className="space-y-1">
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time</p>
@@ -94,70 +98,86 @@ const Reservations = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</p>
-                                                    <p className="text-sm font-bold text-gray-700">{res.customer_name || 'N/A'}</p>
+                                                    <p className="text-sm font-bold text-gray-700">{res.userid?.name || res.customer_name || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
-                                                    <p className="text-sm font-medium text-gray-500 font-mono text-[13px]">{res.customer_phone || 'N/A'}</p>
+                                                    <p className="text-sm font-medium text-gray-500 font-mono text-[13px]">{res.userid?.ph_number || res.customer_phone || 'N/A'}</p>
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2 pt-2">
-                                                <button className="flex-1 py-3 px-4 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-black transition-colors active:scale-95" onClick={() => setActionModalOpen(true)}>
-                                                    Action
-                                                </button>
-                                                <button className="flex-1 py-3 px-4 bg-white border border-gray-200 text-gray-900 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-colors active:scale-95">
-                                                    Modify
-                                                </button>
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Services Included</p>
+                                                <ul className="space-y-1">
+                                                    {res.services && res.services.map((service, sIdx) => (
+                                                        <li key={sIdx} className="text-xs font-bold text-gray-700 flex items-center gap-2">
+                                                            <span className="h-1.5 w-1.5 bg-gray-900 rounded-full" /> {service.Service_name}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <div className="pt-4 border-t border-gray-50 flex justify-between items-end">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Price</p>
+                                                    <p className="text-2xl font-black text-gray-900 leading-none">${res.total_price || '0.00'}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Desktop View (Table) */}
+                                {/* Desktop View (Floating Rows) */}
                                 <div className="hidden md:block overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-separate border-spacing-y-4">
                                         <thead>
-                                            <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
-                                                <th className="pl-8 pr-4 py-5">Schedule</th>
-                                                <th className="px-6 py-5">Customer</th>
-                                                <th className="px-6 py-5 text-center">Status</th>
-                                                <th className="pl-4 pr-8 py-5 text-right">Actions</th>
+                                            <tr className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">
+                                                <th className="pl-8 pr-4 pb-2">Schedule</th>
+                                                <th className="px-6 pb-2">Customer</th>
+                                                <th className="px-6 pb-2">Phone</th>
+                                                <th className="px-6 pb-2">Status</th>
+                                                <th className="px-6 pb-2">Services</th>
+                                                <th className="pr-8 pb-2 text-right">Total Price</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-50">
+                                        <tbody className="text-sm">
                                             {grouped[day].map((res, idx) => (
-                                                <tr key={idx} className="hover:bg-blue-50/30 transition-all duration-200 group">
-                                                    <td className="pl-8 pr-4 py-6">
+                                                <tr key={idx} className="group hover:translate-y-[-2px] transition-all duration-200 cursor-pointer">
+                                                    {/* First Cell: Left Rounding */}
+                                                    <td className="bg-white border-y border-l border-gray-100 rounded-l-[2rem] shadow-sm pl-8 pr-4 py-6">
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-black text-gray-800 leading-none mb-1 group-hover:text-blue-600 transition-colors">
+                                                            <span className="font-black text-gray-800 leading-none mb-1 group-hover:text-blue-600 transition-colors">
                                                                 {formatTime(res.start)}
                                                             </span>
-                                                            <span className="text-[11px] font-bold text-gray-400">
+                                                            <span className="text-[11px] font-bold text-gray-400 uppercase">
                                                                 to {formatTime(res.end)}
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-6">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-gray-700">{res.customer_name || 'N/A'}</span>
-                                                            <span className="text-xs text-gray-400 font-mono tracking-tighter">{res.customer_phone || '—'}</span>
-                                                        </div>
+
+                                                    {/* Middle Cells: Standard Background */}
+                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-bold text-gray-700">
+                                                        {res.userid?.name || res.customer_name || 'N/A'}
                                                     </td>
-                                                    <td className="px-6 py-6 text-center">
+                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-mono text-gray-400 text-[13px] tracking-tighter">
+                                                        {res.userid?.ph_number || res.customer_phone || '—'}
+                                                    </td>
+                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
                                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
                                                             {res.status || 'Scheduled'}
                                                         </span>
                                                     </td>
-                                                    <td className="pl-4 pr-8 py-6 text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <button className="py-2 px-4 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-600 transition-all active:scale-95" onClick={() => setActionModalOpen(true)}>
-                                                                Action
-                                                            </button>
-                                                            <button className="py-2 px-4 bg-white border border-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-widest rounded-lg hover:border-gray-900 hover:text-gray-900 transition-all active:scale-95">
-                                                                Modify
-                                                            </button>
-                                                        </div>
+                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
+                                                        <ul className="text-[11px] font-bold text-gray-600 list-disc list-inside space-y-0.5">
+                                                            {res.services && res.services.map((service, sIdx) => (
+                                                                <li key={sIdx}>{service.Service_name}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </td>
+
+                                                    {/* Last Cell: Right Rounding */}
+                                                    <td className="bg-white border-y border-r border-gray-100 rounded-r-[2rem] shadow-sm pr-8 py-6 text-right">
+                                                        <span className="text-lg font-black text-gray-900">${res.total_price || '0.00'}</span>
                                                     </td>
                                                 </tr>
                                             ))}

@@ -11,7 +11,19 @@ const ReservationSchema = new mongoose.Schema({
     ref: "Barber",
     required: true
   },
-  services: [{type: String, required: true}],
+  services: [
+    {
+      id: {
+        type: String,
+        required: true
+      },
+      Service_name: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }
+  ],
   start: { type: String, required: true },
   end: { type: String, required: true },
   total_price: { type: Number, required: true },

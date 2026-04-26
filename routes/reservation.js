@@ -57,6 +57,7 @@ router.post('/reserve', async (req, res) => {
     const serviceDetails = barber.services
       .filter(item => services.includes(item.service.toString()))
       .map(item => ({
+        serviceID: item.service.toString(),
         name: item.service_name,
         price: item.price,
         duration: item.duration
@@ -68,7 +69,6 @@ router.post('/reserve', async (req, res) => {
     // 2. Calculate the total duration
     const servicesTotalDuration = serviceDetails.reduce((acc, s) => acc + s.duration, 0);
     const servicesTotalPrice = serviceDetails.reduce((total, s) => total + s.price, 0);
-
     const startTime = dayjs(start);
     const endTime = startTime.add(servicesTotalDuration, 'minute');
 
@@ -97,7 +97,7 @@ router.post('/reserve', async (req, res) => {
     const reservation = await Reservation.create({
       userid,
       barberId,
-      services,
+      services: serviceDetails.map(s => ({ id: s.serviceID, Service_name: s.name })),
       start: startTime.format("YYYY-MM-DDTHH:mm:ss"),
       end: endTime.format("YYYY-MM-DDTHH:mm:ss"),
       status: 'confirmed',
@@ -130,11 +130,10 @@ router.get('/:barberID/reservations', authMiddleware, async (req, res) => {
       const Requestedstart = dayjs(start).startOf("day").toDate();
       const Requestedend = dayjs(end).endOf("day").toDate();
 
-      filter.start = { $lte: Requestedend };
-      filter.end = { $gte: Requestedstart };
+      filter.createdAt = { $lte: Requestedend, $gte: Requestedstart };
     }
 
-    const reservations = await Reservation.find(filter);
+    const reservations = await Reservation.find(filter).populate('userid', 'name ph_number');
 
     if (reservations.length === 0) {
       return res.status(404).json({ message: "No reservations found" });
