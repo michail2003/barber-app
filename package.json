@@ -1,24 +1,36 @@
 {
   "name": "barber-app",
   "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/michail2003/barber-app#readme",
+  "bugs": {
+    "url": "https://github.com/michail2003/barber-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michail2003/barber-app.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dayjs": "^1.11.19",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
-    "mongoose": "^9.0.1",
-    "moongose": "^1.0.0",
+    "mongoose": "^9.4.1",
+    "nodemon": "^3.1.14",
     "slugify": "^1.6.6"
   }
 }

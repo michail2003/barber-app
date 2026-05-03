@@ -9,11 +9,12 @@ import StaffDetails from "./Pages/Shop/StaffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
 import Test from './Pages/Test'
+import ShopStats  from "./Pages/Shop/ShopStats";
 import Reservations from "./Pages/Shop/Reservations";
 import Request_window from "./components/Request_window";
 import axios from "axios";
 import User_not_found from "./components/User_not_found";
-import { use, useEffect,useState } from "react";
+import { use, useEffect, useState } from "react";
 
 function App() {
   const token = localStorage.getItem('token');
@@ -23,7 +24,7 @@ function App() {
 
   return (
     <>
-    <User_not_found />
+      <User_not_found />
       <UserNav />
       <br />
       <br />
@@ -56,8 +57,17 @@ function App() {
         <Route
           path="/staff/details"
           element={
-            <ProtectedRoute allowedRoles={['barber_admin','barber']}>
+            <ProtectedRoute allowedRoles={['barber_admin', 'barber']}>
               <StaffDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/shop/statistics"
+          element={
+            <ProtectedRoute allowedRoles={['barber_admin', 'barber']}>
+              <ShopStats />
             </ProtectedRoute>
           }
         />

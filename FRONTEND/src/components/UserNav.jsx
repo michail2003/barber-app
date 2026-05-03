@@ -64,8 +64,14 @@ export function UserNav() {
                   Staff
                 </Link>
               </ProtectedButton>
+
+              <ProtectedButton roles={['barber', 'barber_admin']}>
+                <Link to={`/shop/statistics`} className={navItemStyles(`/${userId}/reservations`)}>
+                  Statistics
+                </Link>
+              </ProtectedButton>
             </>
-            
+
           )}
         </div>
 
@@ -102,7 +108,7 @@ export function UserNav() {
                   Hi, {userName}
                 </span>
               </div>
-              <ProtectedButton roles={['barber_admin','user','barber','admin']}>
+              <ProtectedButton roles={['barber_admin', 'user', 'barber', 'admin']}>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 hover:text-red-700 transition-all active:scale-95"
