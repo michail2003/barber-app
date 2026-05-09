@@ -77,7 +77,7 @@ const ShopStats = () => {
     const pieColors = pieMetric === 'income' ? incomeColors : reservationColors;
     const barColor = barMetric === 'income' ? '#6366f1' : '#ea580c';
 
-    const renderPieLabel = ({ name, cx, cy, midAngle, outerRadius, index }) => {
+    const renderPieLabel = ({ name, cx, cy, midAngle, outerRadius, index, percent }) => {
         const RADIAN = Math.PI / 180;
         const radius = outerRadius + 20;
         const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -88,10 +88,10 @@ const ShopStats = () => {
                 fill={pieColors[index] || '#888'}
                 textAnchor={x > cx ? 'start' : 'end'}
                 dominantBaseline="central"
-                fontSize={11}
+                fontSize={12}
                 fontWeight={600}
             >
-                {name}
+                {`${name} ${(percent * 100).toFixed(0)}%`}
             </text>
         );
     };
@@ -205,10 +205,10 @@ const ShopStats = () => {
                                         nameKey="name"
                                         cx="50%"
                                         cy="50%"
-                                        outerRadius="38%"
+                                        outerRadius="80%"
                                         stroke="none"
                                         label={renderPieLabel}
-                                        labelLine={false}
+                                        
                                     >
                                         {stats[0].barbers.map((entry, index) => (
                                             <Cell key={index} fill={pieColors[index]} />
@@ -219,7 +219,7 @@ const ShopStats = () => {
                             </ResponsiveContainer>
                         </div>
 
-                        <div className="flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-2 md:gap-3 justify-center md:justify-start">
+                        <div className="md:flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-2 md:gap-3 justify-center md:justify-start hidden">
                             {stats[0].barbers.map((entry, index) => (
                                 <div key={index} className="flex items-center gap-2 text-[13px]">
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: pieColors[index] }} />
