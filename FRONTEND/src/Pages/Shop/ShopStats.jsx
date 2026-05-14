@@ -3,20 +3,18 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 
 // Indigo palette (income)
 const incomeColors = ['#c7d2fe', '#3730a3', '#4338ca', '#818cf8', '#6366f1'];
-
-// Orange palette (reservations)
-const reservationColors = ['#fed7aa', '#c2410c', '#ea580c', '#fb923c', '#f97316'];
+const reservationColors = ["#FFFFFF", "#FF5555", "#F1C40F", "#2ECC71", "#E67E22"];
+const highContrastColors = ["#FFFFFF", "#FF5555", "#F1C40F", "#2ECC71", "#E67E22"];
 
 const ToggleBtn = ({ active, onClick, children, metric }) => {
     const activeClass = metric === 'reservations'
-        ? 'bg-orange-500 text-white shadow-sm'
-        : 'bg-indigo-600 text-white shadow-sm';
+        ? 'bg-indigo-950 text-white shadow-sm border-1 border-white cursor-pointer'
+        : 'bg-indigo-600 text-white shadow-sm cursor-pointer';
     return (
         <button
             onClick={onClick}
-            className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all ${
-                active ? activeClass : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
+            className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all ${active ? activeClass : 'bg-gray-100 text-gray-500 hover:bg-gray-200 cursor-pointer'
+                }`}
         >
             {children}
         </button>
@@ -50,9 +48,9 @@ const ShopStats = () => {
         income: 100000,
         reservations: 124,
         barbers: [
-            { name: 'Alex',   income: 20000, reservations: 18, busyHours: [{ hour: '09:00', bookings: 4 }, { hour: '11:00', bookings: 12 }, { hour: '14:00', bookings: 25 }] },
-            { name: 'Marco',  income: 20000, reservations: 22, busyHours: [{ hour: '10:00', bookings: 20 }, { hour: '11:00', bookings: 30 }, { hour: '14:00', bookings: 25 }] },
-            { name: 'Niko',   income: 50000, reservations: 45, busyHours: [{ hour: '12:00', bookings: 20 }, { hour: '14:00', bookings: 22 }] },
+            { name: 'Alex', income: 20000, reservations: 18, busyHours: [{ hour: '09:00', bookings: 4 }, { hour: '11:00', bookings: 12 }, { hour: '14:00', bookings: 25 }] },
+            { name: 'Marco', income: 20000, reservations: 22, busyHours: [{ hour: '10:00', bookings: 20 }, { hour: '11:00', bookings: 30 }, { hour: '14:00', bookings: 25 }] },
+            { name: 'Niko', income: 50000, reservations: 45, busyHours: [{ hour: '12:00', bookings: 20 }, { hour: '14:00', bookings: 22 }] },
             { name: 'Klajdi', income: 25000, reservations: 20, busyHours: [{ hour: '09:00', bookings: 3 }, { hour: '14:00', bookings: 15 }] },
             { name: 'Matteo', income: 25000, reservations: 19, busyHours: [{ hour: '11:00', bookings: 13 }, { hour: '14:00', bookings: 20 }] },
         ],
@@ -62,8 +60,6 @@ const ShopStats = () => {
             { hour: '15:00', bookings: 10 }, { hour: '16:00', bookings: 2 }, { hour: '19:00', bookings: 5 }
         ]
     }];
-
-    const highContrastColors = ["#FFFFFF", "#FF5555", "#F1C40F", "#2ECC71", "#E67E22"];
 
     const busyHoursData = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(hour => {
         let obj = { hour };
@@ -75,7 +71,7 @@ const ShopStats = () => {
     });
 
     const pieColors = pieMetric === 'income' ? incomeColors : reservationColors;
-    const barColor = barMetric === 'income' ? '#6366f1' : '#ea580c';
+    const barColor = barMetric === 'income' ? '#6366f1' : '#DCDCDC';
 
     const renderPieLabel = ({ name, cx, cy, midAngle, outerRadius, index, percent }) => {
         const RADIAN = Math.PI / 180;
@@ -124,6 +120,17 @@ const ShopStats = () => {
         return null;
     };
 
+    const RollingSlot = (targetNumber) => {
+        // Generate our sequence of 10 numbers
+        const sequence = [];
+        for (let i = 0; i < 10; i++) {
+            if (i === 0) sequence.push(0);
+            else if (i === 9) sequence.push(targetNumber);
+            else sequence.push(Math.round((targetNumber / 9) * i));
+        }
+        return sequence
+    };
+    console.log("Rolling Slot Example for 124:", RollingSlot(124));
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
 
@@ -154,7 +161,21 @@ const ShopStats = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Reservations</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{stats[0].reservations}</h3>
+
+                    {/* The Window: We set a fixed height and hide the overflow */}
+                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700 h-[1.2em] overflow-hidden">
+                        <div
+                            className="flex flex-col transition-transform duration-[2000ms] ease-out"
+                            style={{ transform: 'translateY(-90%)' }}
+                        >
+                            {/* Now we map the sequence into the strip */}
+                            {RollingSlot(stats[0].reservations).map((val, index) => (
+                                <span key={index} className="h-[1.2em] flex items-center">
+                                    {val.toLocaleString()}
+                                </span>
+                            ))}
+                        </div>
+                    </h3>
                 </div>
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Income</p>
@@ -174,7 +195,7 @@ const ShopStats = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
 
                 {/* Pie Chart */}
-                <div className="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+                <div className={`p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col ${pieMetric === 'reservations' ? 'bg-indigo-950' : 'bg-white'} transition-colors duration-500`}>
                     <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
                         <h2 className="font-bold text-gray-800 text-xl">Barber Split</h2>
                         <div className="flex gap-2">
@@ -208,7 +229,7 @@ const ShopStats = () => {
                                         outerRadius="80%"
                                         stroke="none"
                                         label={renderPieLabel}
-                                        
+
                                     >
                                         {stats[0].barbers.map((entry, index) => (
                                             <Cell key={index} fill={pieColors[index]} />
@@ -223,8 +244,8 @@ const ShopStats = () => {
                             {stats[0].barbers.map((entry, index) => (
                                 <div key={index} className="flex items-center gap-2 text-[13px]">
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: pieColors[index] }} />
-                                    <span className="font-bold uppercase text-[11px]" style={{ color: pieColors[index] }}>{entry.name}</span>
-                                    <span className="text-xs font-black text-gray-800 hidden md:inline">
+                                    <span className="font-bold uppercase text-[11px]" style={{ color: pieColors[index] }}>{entry.name}:</span>
+                                    <span className={`text-xs font-black hidden md:inline ${pieMetric === 'reservations' ? 'text-white' : 'text-gray-800'}`}>
                                         {pieMetric === 'income' ? `${entry.income.toLocaleString()} L` : `${entry.reservations} res`}
                                     </span>
                                 </div>
@@ -235,7 +256,7 @@ const ShopStats = () => {
                     {/* Mobile values */}
                     <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 mt-2 md:hidden">
                         {stats[0].barbers.map((entry, index) => (
-                            <span key={index} className="text-xs font-black text-gray-700">
+                            <span key={index} className={`text-xs font-black ${pieMetric === 'reservations' ? 'text-white' : 'text-gray-700'}`}>
                                 <span style={{ color: pieColors[index] }}>{entry.name}</span>:{' '}
                                 {pieMetric === 'income' ? `${entry.income.toLocaleString()} L` : `${entry.reservations} res`}
                             </span>
@@ -244,9 +265,9 @@ const ShopStats = () => {
                 </div>
 
                 {/* Bar Chart */}
-                <div className="bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100">
+                <div className={`p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 ${barMetric === 'reservations' ? 'bg-indigo-950' : 'bg-white'} transition-colors duration-500`}>
                     <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
-                        <h2 className="font-bold text-gray-800 text-xl">Revenue Trend</h2>
+                        <h2 className={`font-bold ${barMetric === 'reservations' ? 'text-white' : 'text-gray-800'} text-xl`}>Revenue Trend</h2>
                         <div className="flex gap-2">
                             <ToggleBtn
                                 active={barMetric === 'income'}
@@ -271,16 +292,16 @@ const ShopStats = () => {
                                 data={shop_income_data}
                                 margin={{ top: 4, right: 4, left: 4, bottom: 4 }}
                             >
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" horizontal={false} />
                                 <XAxis
                                     dataKey="name"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 600 }}
+                                    tick={{ fontSize: 10, fontWeight: 600, fill: barMetric === 'reservations' ? '#c7d2fe' : '#4338ca' }}
                                     interval={0}
                                 />
                                 <YAxis hide={true} />
-                                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: '#f8fafc' }} />
+                                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "none", }} />
                                 <Bar dataKey={barMetric} fill={barColor} radius={[8, 8, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
