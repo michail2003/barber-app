@@ -97,6 +97,7 @@ router.post('/reserve', async (req, res) => {
     const reservation = await Reservation.create({
       userid,
       barberId,
+      shopId: barber.shopId,
       services: serviceDetails.map(s => ({ id: s.serviceID, Service_name: s.name })),
       start: startTime.format("YYYY-MM-DDTHH:mm:ss"),
       end: endTime.format("YYYY-MM-DDTHH:mm:ss"),
