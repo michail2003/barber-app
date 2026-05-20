@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const isoWeek = require('dayjs/plugin/isoWeek');
+const mongoose = require('mongoose');
 dayjs.extend(isoWeek);
 
 const Barber_Shop = require('../models/Shop');
@@ -46,7 +47,7 @@ function getDateRange(period) {
 
 function getTopBarber(reservations) {
     if (!reservations || reservations.length === 0) {
-        return { barberId: null, reservationCount: 0 };
+        return null;
     }
 
     const barberCountMap = {};
@@ -55,28 +56,27 @@ function getTopBarber(reservations) {
 
     reservations.forEach(rsv => {
         // Fallback to 'Unknown' if barberId happens to be missing in a bad document
-        const barber = rsv.barberId ? rsv.barberId.toString() : 'Unknown';
+        const barber = { id: rsv.barberId, name: rsv.barberName };
 
         // Increment the count in our hash map
         // If the barber doesn't exist in our map yet, start their count at 1
-        if (!barberCountMap[barber]) {
-            barberCountMap[barber] = 1;
+        if (!barberCountMap[barber.id]) {
+            barberCountMap[barber.id] = 1;
         } else {
             // If they are already in the map, just add 1 to their existing total
-            barberCountMap[barber] += 1;
+            barberCountMap[barber.id] += 1;
         }
 
         // Track the leader
-        if (barberCountMap[barber] > maxReservations) {
-            maxReservations = barberCountMap[barber];
-            topBarberId = barber;
+        if (barberCountMap[barber.id] > maxReservations) {
+            maxReservations = barberCountMap[barber.id];
+            topBarberId = barber; 
         }
-    });
-    return topBarberId; // Return the name of the top barber instead of the ID
+});
+    return topBarberId.name;
 }
 
 function barberStats(reservations) {
-
     const hashmap = {};
 
     reservations.forEach(d => {
@@ -85,20 +85,21 @@ function barberStats(reservations) {
         if (hashmap[d.barberId]) {
 
             hashmap[d.barberId].reservations += 1;
+            hashmap[d.barberId].total_price += d.total_price;
 
         } else {
 
             // create new entry
             hashmap[d.barberId] = {
+                name: d.barberName, 
                 total_price: d.total_price,
-                start: d.start,
                 reservations: 1
             };
 
         }
 
     });
-    
+
     return hashmap;
 }
 
@@ -118,28 +119,78 @@ router.get('/:shopId/overview/:period', async (req, res) => {
             return res.status(400).json({ message: dateRange.error });
         }
 
-        const reservations = await Reservation.find({
-            shopId: shopId,
-            createdAt: {
-                $gte: dateRange.start,
-                $lte: dateRange.end
-            }
-        });
-        const totalIncome = reservations.reduce((total, reservation) => total + reservation.total_price, 0);
-        const topBarberID = getTopBarber(reservations);
-        const topBarber = await Barber.findById(topBarberID).populate('userId', 'name');
-        const barberStatsData = barberStats(reservations);
+        const reservations = await Reservation.aggregate([
+            {
+                $match: {
+                    shopId: new mongoose.Types.ObjectId(shopId),
+                    createdAt: {
+                        $gte: dateRange.start,
+                        $lte: dateRange.end
+                    }
+                }
+            },
 
-        // A migration function to update existing database records
+            // join Barber
+            {
+                $lookup: {
+                    from: "barbers",
+                    localField: "barberId",
+                    foreignField: "_id",
+                    as: "barberId"
+                }
+            },
+            {
+                $unwind: "$barberId"
+            },
+
+            // join User (inside barber)
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "barberId.userId",
+                    foreignField: "_id",
+                    as: "barberUser"
+                }
+            },
+            {
+                $unwind: "$barberUser"
+            },
+
+            // shape output cleanly
+            {
+                $project: {
+                    _id: 1,
+                    barberId: "$barberId._id",
+                    barberName: "$barberUser.name",
+                    shopId: 1,
+                    duration: 1,
+                    services: {
+                        $map: {
+                            input: "$services",
+                            as: "s",
+                            in: "$$s.Service_name"
+                        }
+                    },
+                    start: 1,
+                    end: 1,
+                    total_price: 1,
+                    createdAt: 1,
+                }
+            }
+        ]);
+        const totalIncome = reservations.reduce((total, reservation) => total + reservation.total_price, 0);
+        const topBarberName = getTopBarber(reservations);
+         const barberStatsData = barberStats(reservations);
 
         res.status(200).json({
             period: period,
             general_data: {
                 totalReservations: reservations.length,
                 totalIncome: totalIncome,
-                topBarber: topBarber.userId.name,
+                topBarber: topBarberName,
             },
             barberStats: barberStatsData,
+            res: reservations
         });
     } catch (error) {
         console.error("The exact error is:", error); // <--- ADD THIS LINE
