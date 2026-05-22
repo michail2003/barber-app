@@ -44,9 +44,20 @@ const ShopStats = () => {
         { name: "Dec", income: 185000, reservations: 158 },
     ];
 
-    const stats = [{
-        income: 100000,
+    const general_stats = {
         reservations: 124,
+        income: 150000,
+        lead: "Niko",
+        peakTime: "14:00"
+    };
+
+    const shop_busy_hours = [
+        { hour: '09:00', bookings: 4 }, { hour: '10:00', bookings: 8 }, { hour: '11:00', bookings: 12 },
+        { hour: '12:00', bookings: 15 }, { hour: '13:00', bookings: 10 }, { hour: '14:00', bookings: 25 },
+        { hour: '15:00', bookings: 10 }, { hour: '16:00', bookings: 2 }, { hour: '19:00', bookings: 5 }
+    ];
+
+    const stats = [{
         barbers: [
             { name: 'Alex', income: 20000, reservations: 18, busyHours: [{ hour: '09:00', bookings: 4 }, { hour: '11:00', bookings: 12 }, { hour: '14:00', bookings: 25 }] },
             { name: 'Marco', income: 20000, reservations: 22, busyHours: [{ hour: '10:00', bookings: 20 }, { hour: '11:00', bookings: 30 }, { hour: '14:00', bookings: 25 }] },
@@ -54,11 +65,6 @@ const ShopStats = () => {
             { name: 'Klajdi', income: 25000, reservations: 20, busyHours: [{ hour: '09:00', bookings: 3 }, { hour: '14:00', bookings: 15 }] },
             { name: 'Matteo', income: 25000, reservations: 19, busyHours: [{ hour: '11:00', bookings: 13 }, { hour: '14:00', bookings: 20 }] },
         ],
-        busyHours: [
-            { hour: '09:00', bookings: 4 }, { hour: '10:00', bookings: 8 }, { hour: '11:00', bookings: 12 },
-            { hour: '12:00', bookings: 15 }, { hour: '13:00', bookings: 10 }, { hour: '14:00', bookings: 25 },
-            { hour: '15:00', bookings: 10 }, { hour: '16:00', bookings: 2 }, { hour: '19:00', bookings: 5 }
-        ]
     }];
 
     const busyHoursData = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(hour => {
@@ -120,17 +126,6 @@ const ShopStats = () => {
         return null;
     };
 
-    const RollingSlot = (targetNumber) => {
-        // Generate our sequence of 10 numbers
-        const sequence = [];
-        for (let i = 0; i < 10; i++) {
-            if (i === 0) sequence.push(0);
-            else if (i === 9) sequence.push(targetNumber);
-            else sequence.push(Math.round((targetNumber / 9) * i));
-        }
-        return sequence
-    };
-    console.log("Rolling Slot Example for 124:", RollingSlot(124));
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
 
@@ -159,35 +154,23 @@ const ShopStats = () => {
 
             {/* Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Reservations</p>
-
-                    {/* The Window: We set a fixed height and hide the overflow */}
-                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700 h-[1.2em] overflow-hidden">
-                        <div
-                            className="flex flex-col transition-transform duration-[2000ms] ease-out"
-                            style={{ transform: 'translateY(-90%)' }}
-                        >
-                            {/* Now we map the sequence into the strip */}
-                            {RollingSlot(stats[0].reservations).map((val, index) => (
-                                <span key={index} className="h-[1.2em] flex items-center">
-                                    {val.toLocaleString()}
-                                </span>
-                            ))}
-                        </div>
-                    </h3>
+                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{general_stats.reservations.toLocaleString()}</h3>
                 </div>
+
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Income</p>
-                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{stats[0].income.toLocaleString()} L</h3>
+                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{general_stats.income.toLocaleString()} LEK</h3>
                 </div>
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Peak Time</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">14:00</h3>
+                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{general_stats.peakTime}</h3>
                 </div>
                 <div className="bg-indigo-700 p-5 rounded-2xl shadow-lg">
                     <p className="text-[10px] font-bold text-indigo-200 uppercase">Lead</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-white">Niko</h3>
+                    <h3 className="text-2xl md:text-3xl font-black text-white">{general_stats.lead}</h3>
                 </div>
             </div>
 
@@ -353,7 +336,7 @@ const ShopStats = () => {
                                 ))}
                             </LineChart>
                         ) : (
-                            <LineChart data={stats[0].busyHours} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                            <LineChart data={shop_busy_hours} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                                 <XAxis
                                     dataKey="hour"
