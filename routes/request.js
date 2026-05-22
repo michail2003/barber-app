@@ -75,6 +75,7 @@ router.post('/', async (req, res) => {
         const request = await Request.create({
             userid,
             barberId,
+            shopId: barber.shopId,
             services: serviceDetails,
             start: startTime.format("YYYY-MM-DDTHH:mm:ss"),
             end: endTime.format("YYYY-MM-DDTHH:mm:ss"),

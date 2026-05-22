@@ -11,6 +11,7 @@ const Services = require('./routes/services')
 const Request  = require('./routes/request');
 const connectDB = require('./config/db');
 const Admin = require('./routes/Admin_Managment');
+const Barber_Statistics = require('./routes/Barber_Statistics');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -28,6 +29,7 @@ app.use('/staff-managment',feature);
 app.use('/managing-services',Services);
 app.use('/reservation-request', Request);
 app.use('/admin/managment/', Admin);
+app.use('/statistics', Barber_Statistics);
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
