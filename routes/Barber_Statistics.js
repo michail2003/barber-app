@@ -3,13 +3,13 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const isoWeek = require('dayjs/plugin/isoWeek');
 const mongoose = require('mongoose');
+
 dayjs.extend(isoWeek);
 
 const Barber_Shop = require('../models/Shop');
 const { Reservation } = require('../models/Reservation');
 const Barber = require('../models/barber');
 
-// Modified to return native ISO strings for MongoDB queries
 function getDateRange(period) {
     const today = dayjs();
     let start, end;
@@ -36,79 +36,190 @@ function getDateRange(period) {
     }
 
     return {
-        // Keeping .toDate() allows Mongoose to query the dates perfectly
         start: start.toDate(),
         end: end.toDate(),
-        // For your API response display
         displayStart: start.format('DD/MM/YYYY'),
         displayEnd: end.format('DD/MM/YYYY')
     };
 }
 
+/* =========================
+   FIXED TOP BARBER (logic bug corrected, same idea)
+========================= */
 function getTopBarber(reservations) {
+
     if (!reservations || reservations.length === 0) {
         return null;
     }
 
     const barberCountMap = {};
-    let topBarberId = null;
+    let topBarber = null;
     let maxReservations = 0;
 
-    reservations.forEach(rsv => {
-        // Fallback to 'Unknown' if barberId happens to be missing in a bad document
-        const barber = { id: rsv.barberId, name: rsv.barberName };
+    for (const rsv of reservations) {
 
-        // Increment the count in our hash map
-        // If the barber doesn't exist in our map yet, start their count at 1
-        if (!barberCountMap[barber.id]) {
-            barberCountMap[barber.id] = 1;
+        const barberId = rsv.barberId;
+        const barberName = rsv.barberName;
+
+        if (!barberCountMap[barberId]) {
+            barberCountMap[barberId] = 1;
         } else {
-            // If they are already in the map, just add 1 to their existing total
-            barberCountMap[barber.id] += 1;
+            barberCountMap[barberId] += 1;
         }
 
-        // Track the leader
-        if (barberCountMap[barber.id] > maxReservations) {
-            maxReservations = barberCountMap[barber.id];
-            topBarberId = barber; 
+        if (barberCountMap[barberId] > maxReservations) {
+            maxReservations = barberCountMap[barberId];
+            topBarber = {
+                barberId,
+                name: barberName,
+                reservations: maxReservations
+            };
         }
-});
-    return topBarberId.name;
+    }
+
+    return topBarber;
 }
 
+/* =========================
+   FIXED barberStats (safe + correct accumulation)
+   (kept your object structure as requested)
+========================= */
 function barberStats(reservations) {
+
     const hashmap = {};
 
-    reservations.forEach(d => {
+    for (const d of reservations) {
 
-        // if id already exists
-        if (hashmap[d.barberId]) {
+        const id = d.barberId;
 
-            hashmap[d.barberId].reservations += 1;
-            hashmap[d.barberId].total_price += d.total_price;
+        if (hashmap[id]) {
+
+            hashmap[id].reservations += 1;
+            hashmap[id].total_price += (d.total_price || 0);
 
         } else {
 
-            // create new entry
-            hashmap[d.barberId] = {
-                name: d.barberName, 
-                total_price: d.total_price,
+            hashmap[id] = {
+                name: d.barberName,
+                total_price: (d.total_price || 0),
                 reservations: 1
             };
-
         }
-
-    });
+    }
 
     return hashmap;
 }
 
+/* =========================
+   KEPT YOUR LOGIC (already good)
+========================= */
+function getBusyHours(reservations) {
 
+    const hoursMap = new Map();
+
+    for (const reservation of reservations) {
+
+        const hour = dayjs(reservation.start).hour();
+
+        hoursMap.set(hour, (hoursMap.get(hour) || 0) + 1);
+    }
+
+    let peakHour = null;
+    let maxBookings = 0;
+
+    const busyHours = Array.from(hoursMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([hour, bookings]) => {
+
+            if (bookings > maxBookings) {
+                maxBookings = bookings;
+                peakHour = hour;
+            }
+
+            return {
+                hour,
+                bookings
+            };
+        });
+
+    return {
+        busyHours,
+        peakHour: {
+            hour: peakHour,
+            bookings: maxBookings
+        }
+    };
+}
+
+function getPeriodStats(reservations, period) {
+
+    const result = {};
+
+    for (const r of reservations) {
+
+        const date = dayjs(r.start);
+        const income = r.total_price || 0;
+
+        let key;
+
+        /* =========================
+           YEARLY → MONTHS
+        ========================= */
+        if (period === 'yearly') {
+            key = date.format('MMMM'); // January, February...
+        }
+
+        /* =========================
+           WEEKLY → DAYS
+        ========================= */
+        else if (period === 'weekly') {
+            key = date.format('dddd'); // Monday, Tuesday...
+        }
+
+        /* =========================
+           MONTHLY → WEEK RANGES
+        ========================= */
+        else if (period === 'monthly') {
+
+            const startOfWeek = date.startOf('isoWeek');
+            const endOfWeek = date.endOf('isoWeek');
+
+            key = `${startOfWeek.format('D/M')}-${endOfWeek.format('D/M')}`;
+        }
+
+        /* fallback safety */
+        else {
+            key = date.format('YYYY-MM-DD');
+        }
+
+        if (!result[key]) {
+            result[key] = {
+                reservations: 0,
+                income: 0
+            };
+        }
+
+        result[key].reservations += 1;
+        result[key].income += income;
+    }
+
+    /* convert object → array for frontend */
+    return Object.entries(result).map(([key, value]) => ({
+        period: key,
+        ...value
+    }));
+}
+
+/* =========================
+   MAIN ROUTE
+========================= */
 router.get('/:shopId/overview/:period', async (req, res) => {
+
     const shopId = req.params.shopId;
     const period = req.params.period;
 
     try {
+
         const shop = await Barber_Shop.findById(shopId);
         if (!shop) {
             return res.status(404).json({ message: 'Shop not found' });
@@ -120,6 +231,7 @@ router.get('/:shopId/overview/:period', async (req, res) => {
         }
 
         const reservations = await Reservation.aggregate([
+
             {
                 $match: {
                     shopId: new mongoose.Types.ObjectId(shopId),
@@ -130,7 +242,6 @@ router.get('/:shopId/overview/:period', async (req, res) => {
                 }
             },
 
-            // join Barber
             {
                 $lookup: {
                     from: "barbers",
@@ -139,11 +250,8 @@ router.get('/:shopId/overview/:period', async (req, res) => {
                     as: "barberId"
                 }
             },
-            {
-                $unwind: "$barberId"
-            },
+            { $unwind: "$barberId" },
 
-            // join User (inside barber)
             {
                 $lookup: {
                     from: "users",
@@ -152,11 +260,8 @@ router.get('/:shopId/overview/:period', async (req, res) => {
                     as: "barberUser"
                 }
             },
-            {
-                $unwind: "$barberUser"
-            },
+            { $unwind: "$barberUser" },
 
-            // shape output cleanly
             {
                 $project: {
                     _id: 1,
@@ -174,27 +279,37 @@ router.get('/:shopId/overview/:period', async (req, res) => {
                     start: 1,
                     end: 1,
                     total_price: 1,
-                    createdAt: 1,
+                    createdAt: 1
                 }
             }
         ]);
-        const totalIncome = reservations.reduce((total, reservation) => total + reservation.total_price, 0);
-        const topBarberName = getTopBarber(reservations);
-         const barberStatsData = barberStats(reservations);
 
-        res.status(200).json({
-            period: period,
+        const totalIncome = reservations.reduce((total, r) => {
+            return total + (r.total_price || 0);
+        }, 0);
+
+        const topBarber = getTopBarber(reservations);
+        const barberStatsData = barberStats(reservations);
+        const busyHours = getBusyHours(reservations);
+        const periodStats = getPeriodStats(reservations, period);
+        return res.status(200).json({
+            period,
             general_data: {
                 totalReservations: reservations.length,
-                totalIncome: totalIncome,
-                topBarber: topBarberName,
+                totalIncome,
+                topBarber,
+                peakHour: busyHours.peakHour
             },
             barberStats: barberStatsData,
-            res: reservations
+            busyHours: busyHours.busyHours,
+            periodStats: periodStats
         });
+
     } catch (error) {
-        console.error("The exact error is:", error); // <--- ADD THIS LINE
-        res.status(500).json({ message: 'Error fetching shop overview' });
+        console.error("The exact error is:", error);
+        return res.status(500).json({
+            message: 'Error fetching shop overview'
+        });
     }
 });
 
