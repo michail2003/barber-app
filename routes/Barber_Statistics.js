@@ -36,8 +36,8 @@ function getDateRange(period) {
     }
 
     return {
-        start: start.toDate(),
-        end: end.toDate(),
+        start: start.format('YYYY-MM-DDTHH:mm:ss'), // string, not Date
+        end: end.format('YYYY-MM-DDTHH:mm:ss'),       // string, not Date
         displayStart: start.format('DD/MM/YYYY'),
         displayEnd: end.format('DD/MM/YYYY')
     };
@@ -114,41 +114,21 @@ function barberStats(reservations) {
    KEPT YOUR LOGIC (already good)
 ========================= */
 function getBusyHours(reservations) {
+    const buckets = {}; // plain object, not Map — JSON-native from the start
 
-    const hoursMap = new Map();
-
-    for (const reservation of reservations) {
-
-        const hour = dayjs(reservation.start).hour();
-
-        hoursMap.set(hour, (hoursMap.get(hour) || 0) + 1);
+    for (const res of reservations) {
+        const hour = res.start.substring(11, 13);
+        const label = `${hour}:00 - ${String(Number(hour) + 1).padStart(2, '0')}:00`;
+        buckets[label] = (buckets[label] || 0) + 1;
     }
 
-    let peakHour = null;
-    let maxBookings = 0;
+    return buckets; // already valid JSON shape, no conversion needed
+}
 
-    const busyHours = Array.from(hoursMap.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([hour, bookings]) => {
-
-            if (bookings > maxBookings) {
-                maxBookings = bookings;
-                peakHour = hour;
-            }
-
-            return {
-                hour,
-                bookings
-            };
-        });
-
-    return {
-        busyHours,
-        peakHour: {
-            hour: peakHour,
-            bookings: maxBookings
-        }
-    };
+function getPeakHour(busyHours) {
+    const [peakHour, peakCount] = Object.entries(busyHours)
+        .reduce((max, entry) => entry[1] > max[1] ? entry : max);
+    return { [peakHour]: peakCount };
 }
 
 function getPeriodStats(reservations, period) {
@@ -210,6 +190,8 @@ function getPeriodStats(reservations, period) {
     }));
 }
 
+
+
 /* =========================
    MAIN ROUTE
 ========================= */
@@ -219,7 +201,6 @@ router.get('/:shopId/overview/:period', async (req, res) => {
     const period = req.params.period;
 
     try {
-
         const shop = await Barber_Shop.findById(shopId);
         if (!shop) {
             return res.status(404).json({ message: 'Shop not found' });
@@ -229,16 +210,16 @@ router.get('/:shopId/overview/:period', async (req, res) => {
         if (dateRange.error) {
             return res.status(400).json({ message: dateRange.error });
         }
-
         const reservations = await Reservation.aggregate([
 
             {
                 $match: {
                     shopId: new mongoose.Types.ObjectId(shopId),
-                    createdAt: {
+                    start: {
                         $gte: dateRange.start,
                         $lte: dateRange.end
-                    }
+                    },
+                    status: { $eq: "confirmed" },
                 }
             },
 
@@ -284,6 +265,9 @@ router.get('/:shopId/overview/:period', async (req, res) => {
             }
         ]);
 
+        if (!reservations || reservations.length === 0) {
+            return res.status(200).json({ message: `No reservations found for the selected period ${dateRange.displayStart} to ${dateRange.displayEnd}.` });
+        }
         const totalIncome = reservations.reduce((total, r) => {
             return total + (r.total_price || 0);
         }, 0);
@@ -291,18 +275,21 @@ router.get('/:shopId/overview/:period', async (req, res) => {
         const topBarber = getTopBarber(reservations);
         const barberStatsData = barberStats(reservations);
         const busyHours = getBusyHours(reservations);
+        const peakHourData = getPeakHour(busyHours);
         const periodStats = getPeriodStats(reservations, period);
+
         return res.status(200).json({
             period,
             general_data: {
                 totalReservations: reservations.length,
                 totalIncome,
                 topBarber,
-                peakHour: busyHours.peakHour
+                peakHourData
             },
             barberStats: barberStatsData,
-            busyHours: busyHours.busyHours,
-            periodStats: periodStats
+            busyHours: busyHours,
+            periodStats: periodStats,
+            reservations: reservations
         });
 
     } catch (error) {
