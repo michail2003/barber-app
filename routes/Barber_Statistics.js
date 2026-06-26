@@ -128,7 +128,7 @@ function getBusyHours(reservations) {
 function getPeakHour(busyHours) {
     const [peakHour, peakCount] = Object.entries(busyHours)
         .reduce((max, entry) => entry[1] > max[1] ? entry : max);
-    return { [peakHour]: peakCount };
+    return peakHour;
 }
 
 function getPeriodStats(reservations, period) {
@@ -164,7 +164,11 @@ function getPeriodStats(reservations, period) {
             const startOfWeek = date.startOf('isoWeek');
             const endOfWeek = date.endOf('isoWeek');
 
-            key = `${startOfWeek.format('D/M')}-${endOfWeek.format('D/M')}`;
+            key = `${startOfWeek.format('D/M')} - ${endOfWeek.format('D/M')}`;
+        }
+
+        else if (period === 'daily') {
+            key = date.format('HH:00'); // 14:00, 15:00...\
         }
 
         /* fallback safety */
@@ -182,7 +186,12 @@ function getPeriodStats(reservations, period) {
         result[key].reservations += 1;
         result[key].income += income;
     }
-
+    if (period === 'daily') {
+        return Object.entries(result).map(([key, value]) => ({
+            period: `${key} - ${dayjs(key, 'HH:00').add(1, 'hour').format('HH:00')}`,
+            ...value
+        }));
+    }
     /* convert object → array for frontend */
     return Object.entries(result).map(([key, value]) => ({
         period: key,

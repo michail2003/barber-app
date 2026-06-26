@@ -92,7 +92,6 @@ router.post('/reserve', async (req, res) => {
       }
     }
 
-
     // 6️⃣ Create reservation
     const reservation = await Reservation.create({
       userid,
@@ -116,7 +115,7 @@ router.post('/reserve', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error', err: err.message });
+    res.status(500).json({ message: 'Server error on reservation creation', err: err.message });
   }
 });
 

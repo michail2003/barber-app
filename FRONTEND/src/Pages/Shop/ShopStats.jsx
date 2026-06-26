@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { GetShopStats } from "../../Api/Shop_Statistics";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Line, LineChart, Legend } from 'recharts';
 
 // Indigo palette (income)
@@ -29,52 +30,20 @@ const ShopStats = () => {
     const [pieMetric, setPieMetric] = useState("income");
     const [barMetric, setBarMetric] = useState("income");
 
-    const shop_income_data = [
-        { name: "Jan", income: 95000, reservations: 78 },
-        { name: "Feb", income: 85000, reservations: 65 },
-        { name: "Mar", income: 110000, reservations: 92 },
-        { name: "Apr", income: 105000, reservations: 88 },
-        { name: "May", income: 120000, reservations: 101 },
-        { name: "Jun", income: 135000, reservations: 115 },
-        { name: "Jul", income: 140000, reservations: 120 },
-        { name: "Aug", income: 125000, reservations: 108 },
-        { name: "Sep", income: 138000, reservations: 117 },
-        { name: "Oct", income: 142000, reservations: 122 },
-        { name: "Nov", income: 148000, reservations: 130 },
-        { name: "Dec", income: 185000, reservations: 158 },
-    ];
+    const [apiResponse, setApiResponse] = useState(null);
+    const [shop_busy_hours, setShop_busy_hours] = useState([]);
+    const [barbers, setBarbers] = useState([]);
 
-    const general_stats = {
-        reservations: 124,
-        income: 150000,
-        lead: "Niko",
-        peakTime: "14:00"
-    };
+    function groupingData() {
+        const shop_busy_hours = Object.entries(apiResponse.busyHours).map(([hour, count]) => ({
+            hour,
+            count,
+        }));
+        const barbers = Object.values(apiResponse.barberStats);
 
-    const shop_busy_hours = [
-        { hour: '09:00', bookings: 4 }, { hour: '10:00', bookings: 8 }, { hour: '11:00', bookings: 12 },
-        { hour: '12:00', bookings: 15 }, { hour: '13:00', bookings: 10 }, { hour: '14:00', bookings: 25 },
-        { hour: '15:00', bookings: 10 }, { hour: '16:00', bookings: 2 }, { hour: '19:00', bookings: 5 }
-    ];
-
-    const stats = [{
-        barbers: [
-            { name: 'Alex', income: 20000, reservations: 18, busyHours: [{ hour: '09:00', bookings: 4 }, { hour: '11:00', bookings: 12 }, { hour: '14:00', bookings: 25 }] },
-            { name: 'Marco', income: 20000, reservations: 22, busyHours: [{ hour: '10:00', bookings: 20 }, { hour: '11:00', bookings: 30 }, { hour: '14:00', bookings: 25 }] },
-            { name: 'Niko', income: 50000, reservations: 45, busyHours: [{ hour: '12:00', bookings: 20 }, { hour: '14:00', bookings: 22 }] },
-            { name: 'Klajdi', income: 25000, reservations: 20, busyHours: [{ hour: '09:00', bookings: 3 }, { hour: '14:00', bookings: 15 }] },
-            { name: 'Matteo', income: 25000, reservations: 19, busyHours: [{ hour: '11:00', bookings: 13 }, { hour: '14:00', bookings: 20 }] },
-        ],
-    }];
-
-    const busyHoursData = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"].map(hour => {
-        let obj = { hour };
-        stats[0].barbers.forEach(b => {
-            const match = b.busyHours.find(bh => bh.hour === hour);
-            obj[b.name] = match ? match.bookings : 0;
-        });
-        return obj;
-    });
+        setShop_busy_hours(shop_busy_hours);
+        setBarbers(barbers);
+    }
 
     const pieColors = pieMetric === 'income' ? incomeColors : reservationColors;
     const barColor = barMetric === 'income' ? '#6366f1' : '#DCDCDC';
@@ -126,6 +95,21 @@ const ShopStats = () => {
         return null;
     };
 
+    async function fetchShopStats() {
+        const shopId = localStorage.getItem('shop');
+        const data = await GetShopStats(shopId, filter.toLowerCase());
+        setApiResponse(data);
+    }
+
+    useEffect(() => {
+        fetchShopStats();
+    }, [filter]);
+
+    useEffect(() => {
+        if (apiResponse && !apiResponse.message) {
+            groupingData();
+        }
+    }, [apiResponse]);
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
 
@@ -157,20 +141,20 @@ const ShopStats = () => {
 
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Reservations</p>
-                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{general_stats.reservations.toLocaleString()}</h3>
+                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{apiResponse?.general_data?.totalReservations?.toLocaleString() ?? 0}</h3>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Income</p>
-                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{general_stats.income.toLocaleString()} LEK</h3>
+                    <h3 className="text-xl md:text-3xl font-black text-indigo-700">{apiResponse?.general_data?.totalIncome?.toLocaleString() ?? 0} LEK</h3>
                 </div>
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Peak Time</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{general_stats.peakTime}</h3>
+                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{apiResponse?.general_data?.peakHourData || "-" }</h3>
                 </div>
                 <div className="bg-indigo-700 p-5 rounded-2xl shadow-lg">
                     <p className="text-[10px] font-bold text-indigo-200 uppercase">Lead</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-white">{general_stats.lead}</h3>
+                    <h3 className="text-2xl md:text-3xl font-black text-white">{apiResponse?.general_data?.topBarber?.name || "-"}</h3>
                 </div>
             </div>
 
@@ -180,7 +164,7 @@ const ShopStats = () => {
                 {/* Pie Chart */}
                 <div className={`p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col ${pieMetric === 'reservations' ? 'bg-indigo-950' : 'bg-white'} transition-colors duration-500`}>
                     <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-                        <h2 className="font-bold text-gray-800 text-xl">Barber Split</h2>
+                        <h2 className={`font-bold text-gray-800 text-xl`}>Barber Split {pieMetric === 'reservations' ? 'Reservations' : 'Income'}</h2>
                         <div className="flex gap-2">
                             <ToggleBtn
                                 active={pieMetric === 'income'}
@@ -204,8 +188,8 @@ const ShopStats = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={stats[0].barbers}
-                                        dataKey={pieMetric}
+                                        data={barbers}
+                                        dataKey={pieMetric === 'income' ? 'total_price' : 'reservations'}
                                         nameKey="name"
                                         cx="50%"
                                         cy="50%"
@@ -214,7 +198,7 @@ const ShopStats = () => {
                                         label={renderPieLabel}
 
                                     >
-                                        {stats[0].barbers.map((entry, index) => (
+                                        {barbers.map((entry, index) => (
                                             <Cell key={index} fill={pieColors[index]} />
                                         ))}
                                     </Pie>
@@ -224,12 +208,12 @@ const ShopStats = () => {
                         </div>
 
                         <div className="md:flex flex-row flex-wrap md:flex-col gap-x-4 gap-y-2 md:gap-3 justify-center md:justify-start hidden">
-                            {stats[0].barbers.map((entry, index) => (
+                            {barbers.map((entry, index) => (
                                 <div key={index} className="flex items-center gap-2 text-[13px]">
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: pieColors[index] }} />
                                     <span className="font-bold uppercase text-[11px]" style={{ color: pieColors[index] }}>{entry.name}:</span>
                                     <span className={`text-xs font-black hidden md:inline ${pieMetric === 'reservations' ? 'text-white' : 'text-gray-800'}`}>
-                                        {pieMetric === 'income' ? `${entry.income.toLocaleString()} L` : `${entry.reservations} res`}
+                                        {pieMetric === 'income' ? `${entry.total_price.toLocaleString()} L` : `${entry.reservations} res`}
                                     </span>
                                 </div>
                             ))}
@@ -238,10 +222,10 @@ const ShopStats = () => {
 
                     {/* Mobile values */}
                     <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 mt-2 md:hidden">
-                        {stats[0].barbers.map((entry, index) => (
+                        {barbers.map((entry, index) => (
                             <span key={index} className={`text-xs font-black ${pieMetric === 'reservations' ? 'text-white' : 'text-gray-700'}`}>
                                 <span style={{ color: pieColors[index] }}>{entry.name}</span>:{' '}
-                                {pieMetric === 'income' ? `${entry.income.toLocaleString()} L` : `${entry.reservations} res`}
+                                {pieMetric === 'income' ? `${entry.total_price.toLocaleString()} L` : `${entry.reservations} res`}
                             </span>
                         ))}
                     </div>
@@ -272,12 +256,12 @@ const ShopStats = () => {
                     <div style={{ width: '100%', height: 260 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                                data={shop_income_data}
+                                data={apiResponse?.periodStats}
                                 margin={{ top: 4, right: 4, left: 4, bottom: 4 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" horizontal={false} />
                                 <XAxis
-                                    dataKey="name"
+                                    dataKey="period"
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 10, fontWeight: 600, fill: barMetric === 'reservations' ? '#c7d2fe' : '#4338ca' }}
@@ -309,32 +293,52 @@ const ShopStats = () => {
                 <div style={{ width: '100%', height: 300 }} className="md:h-[450px]">
                     <ResponsiveContainer width="100%" height="100%">
                         {showComparison ? (
-                            <LineChart data={busyHoursData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" horizontal={false} />
+                            // Comparison view disabled: needs per-barber busy-hour data from the API
+                            // (busyHoursData), which isn't implemented yet. Falling back to the
+                            // simple Daily Traffic Pattern chart so nothing breaks.
+                            <LineChart data={shop_busy_hours} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                                 <XAxis
                                     dataKey="hour"
-                                    stroke="#c7d2fe"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10 }}
+                                    tick={{ fontSize: 11 }}
                                     interval="preserveStartEnd"
                                 />
                                 <YAxis hide={true} />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e1b4b', borderRadius: '12px', border: 'none', fontSize: 12 }}
+                                <Tooltip contentStyle={{ borderRadius: '12px', fontSize: 12 }} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="count"
+                                    stroke="#4338ca"
+                                    strokeWidth={4}
+                                    dot={{ r: 5, fill: '#4338ca', strokeWidth: 3, stroke: '#fff' }}
                                 />
-                                <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: 11 }} />
-                                {stats[0].barbers.map((b, i) => (
-                                    <Line
-                                        key={i}
-                                        type="monotone"
-                                        dataKey={b.name}
-                                        stroke={highContrastColors[i]}
-                                        strokeWidth={3}
-                                        dot={{ r: 3 }}
-                                    />
-                                ))}
                             </LineChart>
+                            // <LineChart data={busyHoursData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                            //     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" horizontal={false} />
+                            //     <XAxis
+                            //         dataKey="hour"
+                            //         stroke="#c7d2fe"
+                            //         axisLine={false}
+                            //         tickLine={false}
+                            //         tick={{ fontSize: 10 }}
+                            //         interval="preserveStartEnd"
+                            //     />
+                            //     <YAxis hide={true} />
+                            //     <Tooltip
+                            //         contentStyle={{ backgroundColor: '#1e1b4b', borderRadius: '12px', border: 'none', fontSize: 12 }}
+                            //     />
+                            //     <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: 11 }} />
+                            //     {stats[0].barbers.map((b, i) => (
+                            //         <Line
+                            //             key={i}
+                            //             type="monotone"
+                            //             dataKey={b.name}
+                            //             stroke={highContrastColors[i]}
+                            //             strokeWidth={3}
+                            //             dot={{ r: 3 }}
+                            //         />
+                            //     ))}
+                            // </LineChart>
                         ) : (
                             <LineChart data={shop_busy_hours} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
@@ -347,7 +351,7 @@ const ShopStats = () => {
                                 <Tooltip contentStyle={{ borderRadius: '12px', fontSize: 12 }} />
                                 <Line
                                     type="monotone"
-                                    dataKey="bookings"
+                                    dataKey="count"
                                     stroke="#4338ca"
                                     strokeWidth={4}
                                     dot={{ r: 5, fill: '#4338ca', strokeWidth: 3, stroke: '#fff' }}
