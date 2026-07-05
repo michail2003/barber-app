@@ -66,8 +66,14 @@ export function UserNav() {
               </ProtectedButton>
 
               <ProtectedButton roles={['barber', 'barber_admin']}>
-                <Link to={`/shop/statistics`} className={navItemStyles(`/${userId}/reservations`)}>
+                <Link to={`/shop/statistics`} className={navItemStyles(`/shop/statistics`)}>
                   Statistics
+                </Link>
+              </ProtectedButton>
+
+              <ProtectedButton roles={['barber_admin']}>
+                <Link to={`/add-barber`} className={navItemStyles(`/add-barber`)}>
+                  Add Barber
                 </Link>
               </ProtectedButton>
             </>

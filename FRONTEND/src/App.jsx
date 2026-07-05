@@ -41,7 +41,7 @@ function App() {
         />
 
         <Route path='/:slug' element={<BarberShop />} />
-        <Route path='/:slug/barber' element={<ProtectedRoute allowedRoles={['barber_admin', 'admin']}>
+        <Route path='/add-barber' element={<ProtectedRoute allowedRoles={['barber_admin', 'admin']}>
           <Barber />
         </ProtectedRoute>} />
 

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import "dayjs/locale/sq";
+import { io } from 'socket.io-client'
 import { barberRequests, sendRequest, RequestAnswer } from '../Api/Requests';
 const Request_window = () => {
     const [barberID, setBarberID] = useState(localStorage.getItem('id'));
     const [requests, setRequests] = useState([]);
     const [reqIndex, setReqIndex] = useState(0);
+
     function handleNext() {
         if (reqIndex < requests.length - 1) {
             setReqIndex(reqIndex + 1);
@@ -23,19 +25,27 @@ const Request_window = () => {
     }
     useEffect(() => {
         if (barberID) {
-            const interval = setInterval(() => {
-                barberRequests(barberID)
-                    .then(data => {
-                        setRequests(data.requests.reverse());
-                    }
-                    )
-                    .catch(error => {
-                        console.error('Error fetching barber requests:', error);
-                    });
-            }, 5000); // Fetch every 5 seconds
+            // initial load
+            barberRequests(barberID)
+                .then(data => setRequests(data.requests.reverse()))
+                .catch(error => console.error('Error fetching barber requests:', error))
 
-            return () => clearInterval(interval);
-        } // Cleanup on unmount
+            // socket connection
+            const socket = io('http://localhost:5000', {
+                query: { barberId: barberID }
+            })
+
+            // listen for new requests
+            socket.on('new-request', (request) => {
+                setRequests(prev => [request, ...prev])
+            })
+
+            // cleanup on unmount
+            return () => {
+                socket.off('new-request')
+                socket.disconnect()
+            }
+        }
     }, [barberID]);
     return (
         <>

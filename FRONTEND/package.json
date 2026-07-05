@@ -34,6 +34,7 @@
     "react-router-dom": "^7.10.1",
     "recharts": "^3.8.1",
     "router-dom": "^3.0.3",
+    "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {

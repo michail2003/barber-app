@@ -16,67 +16,62 @@ function isOverlapping(start1, end1, start2, end2) {
 
 
 //ACCEPT FUNCTION
-function Accepted(request) {
+async function Accepted(request) {
+    let reserveResponse;
+
     try {
         const reservePayload = {
             userid: request.userid,
             barberId: request.barberId,
-            services: request.services.map(s => s.serviceID), // Assuming services in Request are populated with _id
+            services: request.services.map(s => s.serviceID),
             start: request.start,
         };
-        const reserveResponse = await axios.post(`http://localhost:${port}/reservations/reserve`, reservePayload);
-
-        Request.findByIdAndDelete(id).catch(err => console.error('Failed to delete request after reservation:', err));
-        return res.status(200).json({
-            message: 'Request accepted and reserved successfully',
-            reservationCreated: reserveResponse.data
-        });
-
-    } catch (reserveErr) {
-        return res.status(500).json({
-            message: 'Request accepted but failed to reserve',
-            request,
-            error: reserveErr.response?.data || reserveErr.message
-        });
+        reserveResponse = await axios.post(`http://localhost:${port}/reservations/reserve`, reservePayload);
+    } catch (err) {
+        throw new Error(`Reservation failed: ${err.response?.data?.message || err.message}`);
     }
+
+    try {
+        await Request.findByIdAndDelete(request._id);
+    } catch (err) {
+        throw new Error(`Deletion failed: ${err.message}`);
+    }
+
+    return reserveResponse.data;
 }
 
 
 // CANCEL FUNCTION
-function Cancelled(requestID) {
+async function Cancelled(request) {
+
+    let barber_update;
+
     try {
-        const request = await Request.findByIdAndDelete(requestID);
+        await Request.findByIdAndDelete(request._id);
+    } catch (err) {
+        throw new Error(`Failed to delete request: ${err.message}`);
+    }
 
-        if (!request) {
-            return res.status(404).json({ message: 'Request not found' });
-        }
-
-        const barber_update = await Barber.updateOne(
+    try {
+        barber_update = await Barber.updateOne(
             { _id: request.barberId },
-            { $pull: { requests: requestID } }
+            { $pull: { requests: request._id } }
         );
 
-        // Barber not found
-        if (barber_update.matchedCount === 0) {
-            return res.status(404).json({ message: 'Barber not found' });
-        }
-
-        // Barber found but request ID was not in barber.requests
-        if (barber_update.modifiedCount === 0) {
-            return res.status(200).json({
-                message: 'Request deleted, but request ID was not in barber requests'
-            });
-        }
-
-        // Barber found and request ID removed
-        return res.status(200).json({ message: 'Request deleted and removed from barber' });
-
     } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Server error', err: err.message });
+        throw new Error(`Failed to update barber: ${err.message}`);
     }
-}
 
+    if (barber_update.matchedCount === 0) {
+        throw new Error('Barber not found');
+    }
+
+    if (barber_update.modifiedCount === 0) {
+        return { warning: 'Request deleted, but request ID was not in barber requests' };
+    }
+
+    return { message: 'Request deleted and removed from barber' };
+}
 
 router.post('/', async (req, res) => {
     try {
@@ -87,9 +82,12 @@ router.post('/', async (req, res) => {
             start,
         } = req.body;
 
+        if (!userid) {
+            return res.status(400).json({ message: 'userid is required' });
+        }
         const userVerification = await User.findById(userid);
-        if (!userid || !userVerification) {
-            return res.status(404).json({ message: 'log in with email or guest' });
+        if (!userVerification) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const barber = await Barber.findById(barberId).populate('reservations');
@@ -149,9 +147,11 @@ router.post('/', async (req, res) => {
             duration: servicesTotalDuration
         });
 
-        barber.requests.push(request._id);
-        await barber.save();
+        await Barber.updateOne({ _id: barberId }, { $push: { requests: request._id } });
 
+        const io = req.app.get('io');
+        io.to(`barber:${barberId}`).emit('new-request', request);
+        
         res.status(201).json({
             message: 'Request sent successfully',
             request
@@ -172,22 +172,26 @@ router.put('/:id/', async (req, res) => {
             return res.status(404).json({ message: 'Request not found' });
         }
 
-        if (!['accepted', 'cancelled', 'modified', 'pending'].includes(status)) {
+        if (!['accepted', 'cancelled'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status value' });
         }
 
         // If accepted, call /reserve endpoint
         if (status === 'accepted') {
-
+            const reservationData = await Accepted(request);
+            return res.status(200).json({
+                message: 'Request accepted and reserved successfully',
+                reservationCreated: reservationData
+            });
         }
         if (status === 'cancelled') {
-
+            const result = await Cancelled(request);
+            return res.status(200).json(result);
         }
         // For other statuses
         return res.status(200).json({ message: 'Request status updated', request });
 
     } catch (err) {
-        console.error(err);
         res.status(500).json({ message: 'Server error on status update', err: err.message });
     }
 });
@@ -198,7 +202,7 @@ router.get('/barber-requests/:id/', async (req, res) => {
         const { id } = req.params;
 
         const requests = await Request.find({ barberId: id }).populate('userid', 'name ph_number');
-        if (!requests) {
+        if (requests.length === 0) {
             return res.status(404).json({ message: 'No requests found for this barber' });
         }
         res.status(200).json({ requests });
