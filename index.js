@@ -7,6 +7,7 @@ const app = express();
 const server = http.createServer(app)
 const port = process.env.PORT || 3000;
 const connectDB = require('./config/db');
+
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:5173',

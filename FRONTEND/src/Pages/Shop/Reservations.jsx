@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { barber_reservations } from '../../Api/reservation';
+import dayjs from 'dayjs';
+import isoWeek from "dayjs/plugin/isoWeek";
+import weekday from "dayjs/plugin/weekday";
 
+dayjs.extend(isoWeek);
+dayjs.extend(weekday);
 const Reservations = () => {
     const [reservimet, setReservimet] = useState([]);
     const [actionModalOpen, setActionModalOpen] = useState(false);
     const id = localStorage.getItem('id');
+    const [Now_reservation, setNow_reservation] = useState(null);
+    const [Day, setDay] = useState(dayjs().format('YYYY-MM-DD'));
+    const [weekDays, setWeekDays] = useState([]);
 
     useEffect(() => {
-        if (id) fetchreservations();
-    }, [id]);
+        if (id && Day) {
+            fetchreservations();
+            weekDisplay();
+        }
+    }, [id, Day]);
 
     const fetchreservations = async () => {
         try {
-            const data = await barber_reservations(id);
+            const data = await barber_reservations(id, Day);
             // Handle both direct array and object with reservations property
             const reservations = Array.isArray(data) ? data : data.reservations || [];
             setReservimet(reservations);
@@ -39,17 +50,32 @@ const Reservations = () => {
     };
 
     // Group reservations by day (sorted by date, newest first)
-    const sortedReservations = [...reservimet].sort((a, b) => new Date(b.start) - new Date(a.start));
-    const grouped = sortedReservations.length > 0 ? sortedReservations.reduce((acc, res) => {
-        const day = new Date(res.start).toLocaleDateString('en-GB', {
-            weekday: 'long', day: 'numeric', month: 'long'
-        });
-        if (!acc[day]) acc[day] = [];
-        acc[day].push(res);
-        return acc;
-    }, {}) : {};
+    const sortedReservations = [...reservimet].sort(
+        (a, b) => dayjs(b.start).valueOf() - dayjs(a.start).valueOf()
+    );
 
-    console.log("reserbimet", reservimet);
+    const grouped = sortedReservations.reduce((acc, res) => {
+        const d = dayjs(res.start);
+
+        const dayLabel = d.isSame(dayjs(), "day")
+            ? "Today"
+            : d.format("dddd, D MMMM");
+
+        if (!acc[dayLabel]) acc[dayLabel] = [];
+        acc[dayLabel].push(res);
+
+        return acc;
+    }, {});
+
+    function weekDisplay() {
+        let start = dayjs(Day).startOf('isoWeek').format('YYYY-MM-DD');
+        const weekDays = [];
+        for (let i = 0; i < 7; i++) {
+            weekDays.push(dayjs(start).add(i, 'day').format('YYYY-MM-DD'));
+        }
+        setWeekDays(weekDays);
+    }
+    console.log('Grouped Reservations:', grouped);
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen font-sans relative">
             <div className="max-w-6xl mx-auto">
@@ -59,7 +85,65 @@ const Reservations = () => {
                         <p className="text-gray-500 text-sm mt-1">Manage and track your upcoming bookings.</p>
                     </div>
                 </header>
+                {/* calendar navigation */}
+                <div className="flex items-center justify-between md:gap-4 gap-2 mb-6 w-full">
+                    <button className="mb-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors md:block hidden "
+                        onClick={() => {
+                            const prevDay = dayjs(Day).startOf('isoWeek').subtract(1, 'week').format('YYYY-MM-DD');
+                            setReservimet([])
+                            setDay(prevDay);
+                        }}
+                    >
+                        Back
+                    </button>
 
+                    <div className="flex items-center justify-between md:gap-8 gap-4 md:py-4 py-2 overflow-x-auto px-4 bg-white rounded-3xl shadow-sm border border-gray-100 mb-6">
+                        {weekDays.map((day) => (
+                            dayjs().isSame(day, 'day') ? (
+                                <span className={`md:text-base text-xs ${dayjs().isSame(Day, 'day') ? 'text-blue-600 border-l-0 border-r-0 border-t-0 border-b-2 py-2 transition-[padding,color] duration-200' : 'text-black'} cursor-pointer font-black`}
+                                    key={day}
+                                    onClick={() => { setReservimet([]); setDay(day) }}
+                                >
+                                    Today
+                                </span>
+                            ) :
+                                dayjs(day).isSame(Day, 'day') ? (
+
+                                    <span className="md:text-sm font-black text-blue-600 text-xs ease-in duration-200"
+                                        key={day}
+                                    >
+                                        {dayjs(day).format('ddd, D MMM')}
+                                    </span>
+
+                                ) : (
+                                    <div>
+                                        <span className="hidden md:block text-sm font-medium text-gray-700 cursor-pointer"
+                                            key={day}
+                                            onClick={() => { setReservimet([]); setDay(day) }}
+                                        >
+                                            {dayjs(day).format('ddd, D MMM')}
+                                        </span>
+
+                                        <span className="md:hidden block text-sm font-medium text-gray-700 cursor-pointer"
+                                            onClick={() => { setReservimet([]); setDay(day) }}
+                                        >
+                                            {dayjs(day).format('ddd')}
+                                        </span>
+                                    </div>
+                                )))}
+                    </div>
+
+                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors md:block hidden"
+                        onClick={() => {
+                            const nextWeek = dayjs(Day).startOf('isoWeek').add(1, 'week').format('YYYY-MM-DD');
+                            setDay(nextWeek);
+                            setReservimet([])
+
+                        }}
+                    >
+                        Next
+                    </button>
+                </div>
                 {Object.keys(grouped).length === 0 ? (
                     <div className="bg-white p-16 rounded-3xl shadow-sm border border-gray-100 text-center">
                         <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -68,6 +152,7 @@ const Reservations = () => {
                         <h3 className="text-gray-900 font-bold text-lg">No reservations found</h3>
                     </div>
                 ) : (
+
                     Object.keys(grouped).map((day) => (
                         <div key={day} className="mb-12">
                             {/* Day Header */}
@@ -98,11 +183,11 @@ const Reservations = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</p>
-                                                    <p className="text-sm font-bold text-gray-700">{res.userid?.name || res.customer_name || 'N/A'}</p>
+                                                    <p className="text-sm font-bold text-gray-700">{res.customerName || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
-                                                    <p className="text-sm font-medium text-gray-500 font-mono text-[13px]">{res.userid?.ph_number || res.customer_phone || 'N/A'}</p>
+                                                    <p className="text-sm font-medium text-gray-500 font-mono text-[13px]">{res.CustomerNumber || 'N/A'}</p>
                                                 </div>
                                             </div>
 
@@ -111,7 +196,7 @@ const Reservations = () => {
                                                 <ul className="space-y-1">
                                                     {res.services && res.services.map((service, sIdx) => (
                                                         <li key={sIdx} className="text-xs font-bold text-gray-700 flex items-center gap-2">
-                                                            <span className="h-1.5 w-1.5 bg-gray-900 rounded-full" /> {service.Service_name}
+                                                            <span className="h-1.5 w-1.5 bg-gray-900 rounded-full" /> {service}
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -157,10 +242,10 @@ const Reservations = () => {
 
                                                     {/* Middle Cells: Standard Background */}
                                                     <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-bold text-gray-700">
-                                                        {res.userid?.name || res.customer_name || 'N/A'}
+                                                        {res.customerName || 'N/A'}
                                                     </td>
                                                     <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-mono text-gray-400 text-[13px] tracking-tighter">
-                                                        {res.userid?.ph_number || res.customer_phone || '—'}
+                                                        {res.CustomerNumber || 'N/A'}
                                                     </td>
                                                     <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
                                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
@@ -170,7 +255,7 @@ const Reservations = () => {
                                                     <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
                                                         <ul className="text-[11px] font-bold text-gray-600 list-disc list-inside space-y-0.5">
                                                             {res.services && res.services.map((service, sIdx) => (
-                                                                <li key={sIdx}>{service.Service_name}</li>
+                                                                <li key={sIdx}>{service}</li>
                                                             ))}
                                                         </ul>
                                                     </td>

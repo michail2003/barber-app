@@ -11,9 +11,9 @@ async function reservation(reservationData) {
     }
 }
 
-async function barber_reservations(barberid) {
+async function barber_reservations(barberid, date) {
     try {
-        const response = await axios.get(`${Api}/${barberid}/reservations`);
+        const response = await axios.get(`${Api}/${barberid}/reservations/${date}`);
         return response.data
     } catch (error) {
         console.error('Error getting data from server:', error);

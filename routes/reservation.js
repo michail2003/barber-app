@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
@@ -35,6 +36,28 @@ function next_rsv_time(req_start, req_duration, req_end, reservations) {
   }
   return { next_start: next_start.format("YYYY-MM-DDTHH:mm:ss"), next_end: next_end.format("YYYY-MM-DDTHH:mm:ss") };
 }
+
+function getDateRange(DayRequested) {
+
+  if (!DayRequested) {
+    return { error: "Day is required" };
+  }
+
+  const day = dayjs(DayRequested);
+  let start = null;
+  let end = null;
+
+  start = day.startOf('day');
+  end = day.endOf('day');
+
+  return {
+    start: start.format('YYYY-MM-DDTHH:mm:ss'), // string, not Date
+    end: end.format('YYYY-MM-DDTHH:mm:ss'),       // string, not Date
+    displayStart: start.format('DD/MM/YYYY'),
+    displayEnd: end.format('DD/MM/YYYY')
+  };
+}
+
 
 router.post('/reserve', async (req, res) => {
   try {
@@ -119,21 +142,56 @@ router.post('/reserve', async (req, res) => {
   }
 });
 
-router.get('/:barberID/reservations', authMiddleware, async (req, res) => {
+router.get('/:barberID/reservations/:period', authMiddleware, async (req, res) => {
   try {
-    const { barberID } = req.params;
-    const { start, end } = req.query;
+    const { barberID, period } = req.params;
 
-    let filter = { barberId: barberID };
-
-    if (start && end) {
-      const Requestedstart = dayjs(start).startOf("day").toDate();
-      const Requestedend = dayjs(end).endOf("day").toDate();
-
-      filter.createdAt = { $lte: Requestedend, $gte: Requestedstart };
+    const dateRange = getDateRange(period);
+    if (dateRange.error) {
+      return res.status(400).json({ message: dateRange.error });
     }
 
-    const reservations = await Reservation.find(filter).populate('userid', 'name ph_number');
+    const reservations = await Reservation.aggregate([
+
+      {
+        $match: {
+          barberId: new mongoose.Types.ObjectId(barberID),
+          start: {
+            $gte: dateRange.start,
+            $lte: dateRange.end
+          },
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userid",
+          foreignField: "_id",
+          as: "Customer"
+        }
+      },
+      { $unwind: "$Customer" },
+
+      {
+        $project: {
+          _id: 1,
+          customerName: "$Customer.name",
+          CustomerNumber: "$Customer.ph_number",
+          duration: 1,
+          services: {
+            $map: {
+              input: "$services",
+              as: "s",
+              in: "$$s.Service_name"
+            }
+          },
+          start: 1,
+          end: 1,
+          total_price: 1,
+          createdAt: 1
+        }
+      }
+    ]);
 
     if (reservations.length === 0) {
       return res.status(404).json({ message: "No reservations found" });
@@ -145,6 +203,9 @@ router.get('/:barberID/reservations', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
+
+
+
 
 router.post('/:barbershopID/available-barbers', async (req, res) => {
   try {
