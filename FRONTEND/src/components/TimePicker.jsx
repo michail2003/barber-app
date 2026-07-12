@@ -3,12 +3,12 @@ import React, { useState, useMemo } from 'react';
 
 const TimePicker = ({ value, onChange }) => {
     const [modalOpen, setModalOpen] = useState(false);
-    const [shopOpen, setShopOpen] = useState("08:00"); 
+    const [TimeNow, setTimeNow] = useState(dayjs().format('HH:mm')); 
     const [shopClose, setShopClose] = useState("21:00"); 
     // useMemo prevents re-calculating this array on every re-render
     const times = useMemo(() => {
         const t = [];
-        for (let hour = shopOpen.split(':')[0]; hour < shopClose.split(':')[0]; hour++) {
+        for (let hour = TimeNow.split(':')[0]; hour < shopClose.split(':')[0]; hour++) {
             for (let min = 0; min < 60; min += 10) { // 15 min increments look cleaner
                 const h = hour.toString().padStart(2, '0');
                 const m = min.toString().padStart(2, '0');

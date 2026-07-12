@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronsUp } from 'lucide-react';
 import { barber_reservations } from '../../Api/reservation';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -87,17 +88,18 @@ const Reservations = () => {
                 </header>
                 {/* calendar navigation */}
                 <div className="flex items-center justify-between md:gap-4 gap-2 mb-6 w-full">
-                    <button className="mb-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors md:block hidden "
+
+                    <button className="md:px-6 md:py-4 md:shadow-lg md:border md:border-blue-100 text-gray-700 md:rounded-3xl group transition-colors cursor-pointer"
                         onClick={() => {
                             const prevDay = dayjs(Day).startOf('isoWeek').subtract(1, 'week').format('YYYY-MM-DD');
                             setReservimet([])
                             setDay(prevDay);
                         }}
                     >
-                        Back
+                        <span className='flex items-center gap-2 md:text-base'><ChevronsUp className="transform rotate-270 text-blue-600 group-hover:-translate-x-3 transition-transform duration-200" /><p className="hidden md:block">Back</p></span>
                     </button>
 
-                    <div className="flex items-center justify-between md:gap-8 gap-4 md:py-4 py-2 overflow-x-auto px-4 bg-white rounded-3xl shadow-sm border border-gray-100 mb-6">
+                    <div className="flex items-center justify-between md:gap-8 gap-4 md:py-4 py-2 overflow-x-auto px-4 bg-white rounded-3xl shadow-sm border border-gray-100">
                         {weekDays.map((day) => (
                             dayjs().isSame(day, 'day') ? (
                                 <span className={`md:text-base text-xs ${dayjs().isSame(Day, 'day') ? 'text-blue-600 border-l-0 border-r-0 border-t-0 border-b-2 py-2 transition-[padding,color] duration-200' : 'text-black'} cursor-pointer font-black`}
@@ -133,7 +135,7 @@ const Reservations = () => {
                                 )))}
                     </div>
 
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors md:block hidden"
+                   <button className="md:px-6 md:py-4 md:shadow-lg md:border md:border-blue-100 text-gray-700 md:rounded-3xl group transition-colors cursor-pointer"
                         onClick={() => {
                             const nextWeek = dayjs(Day).startOf('isoWeek').add(1, 'week').format('YYYY-MM-DD');
                             setDay(nextWeek);
@@ -141,7 +143,7 @@ const Reservations = () => {
 
                         }}
                     >
-                        Next
+                         <span className='flex items-center gap-2 md:text-base'><p className="hidden md:block">Next</p><ChevronsUp className="transform rotate-90 text-blue-600 group-hover:translate-x-3 transition-transform duration-200" /></span>
                     </button>
                 </div>
                 {Object.keys(grouped).length === 0 ? (
