@@ -1,3 +1,40 @@
 @import "tailwindcss";
 @import "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
+
+
+@keyframes TimeChangeUp {
+  0% {
+    transform: translateY(-35px) scale(0.7);
+  }
+
+  60% {
+    transform: translateY(2px) scale(1.05);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-TimeChangeUp {
+  animation: TimeChangeUp 0.5s ease-in-out;
+}
+
+@keyframes TimeChangeDown {
+  0% {
+    transform: translateY(30px) scale(0.7);
+  }
+
+  60% {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-TimeChangeDown {
+  animation: TimeChangeDown 0.5s ease-in-out;
+}
