@@ -107,9 +107,15 @@ const ShopStats = () => {
 
     useEffect(() => {
         if (apiResponse && !apiResponse.message) {
-            groupingData();
+            return groupingData();
         }
+        if (apiResponse?.message) {
+            setBarbers([])
+            setShop_busy_hours([])
+        }
+
     }, [apiResponse]);
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
 
@@ -150,7 +156,7 @@ const ShopStats = () => {
                 </div>
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">Peak Time</p>
-                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{apiResponse?.general_data?.peakHourData || "-" }</h3>
+                    <h3 className="text-2xl md:text-3xl font-black text-indigo-700">{apiResponse?.general_data?.peakHourData || "-"}</h3>
                 </div>
                 <div className="bg-indigo-700 p-5 rounded-2xl shadow-lg">
                     <p className="text-[10px] font-bold text-indigo-200 uppercase">Lead</p>
