@@ -7,7 +7,6 @@ const Register = () => {
     email: '',
     password: '',
     ph_number: '',
-
   });
 
   const [loading, setLoading] = useState(false);
@@ -16,78 +15,115 @@ const Register = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
-  const handleRegister = async () => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // 🔁 replace with your real API call
-      user_registration(formData)
+      await user_registration(formData);
       alert('Registered successfully!');
     } catch (err) {
-      setError('Registration failed');
+      setError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded shadow-md w-96">
+    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-8 border border-slate-100">
+        
+        {/* Header Section */}
+        <div className="mb-8 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Create an account
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Enter your details below to get started
+          </p>
+        </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
+        {/* Form Container */}
+        <form onSubmit={handleRegister} className="space-y-4">
+          
+          {error && (
+            <div className="bg-red-50 text-red-600 text-xs font-medium p-3 rounded-lg border border-red-100">
+              {error}
+            </div>
+          )}
 
-        {error && (
-          <p className="text-red-500 text-sm mb-3">{error}</p>
-        )}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              required
+              placeholder="John Doe"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-slate-50 text-slate-900 text-sm rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400"
+            />
+          </div>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-slate-50 text-slate-900 text-sm rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400"
+            />
+          </div>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-slate-50 text-slate-900 text-sm rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400"
+            />
+          </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="ph_number"
+              placeholder="+1 (555) 000-0000"
+              value={formData.ph_number}
+              onChange={handleChange}
+              className="w-full px-3.5 py-2.5 bg-slate-50 text-slate-900 text-sm rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400"
+            />
+          </div>
 
-       <input
-          type="text"
-          name="ph_number"
-          placeholder="Phone number"
-          value={formData.ph_number}
-          onChange={handleChange}
-          className="w-full mb-3 p-2 border rounded"
-        />
-
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-        >
-          {loading ? 'Registering...' : 'Register'}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating account...' : 'Create account'}
+          </button>
+        </form>
 
       </div>
     </div>

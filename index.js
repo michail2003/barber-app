@@ -36,6 +36,7 @@ const Services = require('./routes/services')
 const Request = require('./routes/request');
 const Admin = require('./routes/Admin_Managment');
 const Barber_Statistics = require('./routes/Barber_Statistics');
+const User_Reservations = require('./routes/User_Reservations');
 
 connectDB();
 
@@ -53,6 +54,7 @@ app.use('/managing-services', Services);
 app.use('/reservation-request', Request);
 app.use('/admin/managment/', Admin);
 app.use('/statistics', Barber_Statistics);
+app.use('/User-Reservations/',User_Reservations)
 
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);

@@ -39,7 +39,7 @@ const ReservationSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-ReservationSchema.index({ shopId: 1, status: 1, start: 1 });
+ReservationSchema.index({ shopId: 1, status: 1, start: 1, userid:1 });
 
 const Reservation = mongoose.model("Reservation", ReservationSchema);
 

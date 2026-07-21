@@ -154,7 +154,7 @@ const Barber_Shop = () => {
         }
     }, [availability]);
 
-    console.log(Barbers);
+    console.log(selectedDate);
 
     return (
         <div className="min-h-screen bg-[#F9FAFB] text-gray-900 pb-12">

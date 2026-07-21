@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, SquareChevronRight } from 'lucide-react';
 
-const TimePicker = ({ value, onChange }) => {
+const TimePicker = ({ pickedTime }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [timeNow, setTimeNow] = useState(dayjs());
     const [openTime, setOpenTime] = useState("09:00")
@@ -128,7 +128,7 @@ const TimePicker = ({ value, onChange }) => {
                                 </button>
                                 <div className="flex flex-col items-center select-none pointer-events-none">
                                     <span className="text-neutral-900 text-sm opacity-50 mt-1">{formatNumber(getHourNeighbors()[2])}</span>
-                                    <span key={hour} className={`text-indigo-500 text-4xl font-bold tracking-tight my-2 ${rollerDirectionH === 'up'?'animate-TimeChangeUp':'animate-TimeChangeDown' }`}>{formatNumber(getHourNeighbors()[1])}</span>
+                                    <span key={hour} className={`text-indigo-500 text-4xl font-bold tracking-tight my-2 ${rollerDirectionH === 'up' ? 'animate-TimeChangeUp' : 'animate-TimeChangeDown'}`}>{formatNumber(getHourNeighbors()[1])}</span>
                                     <span className="text-neutral-300 text-sm opacity-50 mb-1">{formatNumber(getHourNeighbors()[0])}</span>
 
                                 </div>
@@ -152,7 +152,7 @@ const TimePicker = ({ value, onChange }) => {
                                 </button>
                                 <div className="flex flex-col items-center select-none pointer-events-none">
                                     <span className="text-neutral-900 text-sm opacity-50 mb-1">{formatNumber(getMinuteNeighbors()[2])}</span>
-                                     <span key={minute} className={`text-indigo-500 text-4xl font-bold tracking-tight my-2 ${rollerDirectionM === 'up'?'animate-TimeChangeUp':'animate-TimeChangeDown' }`}>{formatNumber(getMinuteNeighbors()[1])}</span>
+                                    <span key={minute} className={`text-indigo-500 text-4xl font-bold tracking-tight my-2 ${rollerDirectionM === 'up' ? 'animate-TimeChangeUp' : 'animate-TimeChangeDown'}`}>{formatNumber(getMinuteNeighbors()[1])}</span>
                                     <span className="text-neutral-300 text-sm opacity-50 mt-1">{formatNumber(getMinuteNeighbors()[0])}</span>
                                 </div>
                                 <button
@@ -170,7 +170,7 @@ const TimePicker = ({ value, onChange }) => {
                             onClick={() => {
                                 const selected = `${formatNumber(hour)}:${formatNumber(minute)}`;
 
-                                onChange(selected);      // Send time to parent
+                                pickedTime = selected;
                                 setModalOpen(false);     // Close modal
                             }}
                         >
