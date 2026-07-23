@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, SquareChevronRight } from 'lucide-react';
+import { use } from 'react';
 
 const TimePicker = ({ pickedTime }) => {
     const [modalOpen, setModalOpen] = useState(false);
@@ -94,6 +95,11 @@ const TimePicker = ({ pickedTime }) => {
 
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const selected = `${formatNumber(hour)}:${formatNumber(minute)}`;
+        pickedTime(selected)
+    }, [hour, minute])
     return (
         <div className="w-full">
             {/* 1. TRIGGER BUTTON (Visible on Page) */}

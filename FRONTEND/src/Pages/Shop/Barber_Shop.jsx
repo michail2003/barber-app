@@ -8,7 +8,7 @@ import TimePicker from '../../components/TimePicker';
 const Barber_Shop = () => {
     const [selectedServices, setSelectedServices] = useState([]);
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
-    const [selectedTime, setSelectedTime] = useState(dayjs().format('HH:mm'));
+    const [selectedTime, setSelectedTime] = useState();
     const [selectedBarber, setSelectedBarber] = useState(null); // Added state for barber selection
     const [weekOffset, setWeekOffset] = useState(0);
     const [catalog, setCatalog] = useState([]);
@@ -19,7 +19,6 @@ const Barber_Shop = () => {
     const [stepsCompleted, setStepsCompleted] = useState(false);
     const [totalPrice, setTotalPrice] = useState(0);
     const finalOutput = dayjs(`${selectedDate}${selectedTime}`).format('YYYY-MM-DDTHH:mm:ss');
-
 
     const slug = window.location.pathname.substring(1);
 
@@ -153,9 +152,7 @@ const Barber_Shop = () => {
             }
         }
     }, [availability]);
-
-    console.log(selectedDate);
-
+    
     return (
         <div className="min-h-screen bg-[#F9FAFB] text-gray-900 pb-12">
             {/* Hero Section */}
@@ -229,7 +226,7 @@ const Barber_Shop = () => {
                                 </div>
                             ))}
                         </div>
-                        <TimePicker value={selectedTime} onChange={setSelectedTime} />
+                        <TimePicker pickedTime={setSelectedTime} />
                     </div>
                 </div>
 

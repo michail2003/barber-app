@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronsUp } from 'lucide-react';
+import { ChevronsUp, ContactRound, Clock, Phone } from 'lucide-react';
 import { barber_reservations } from '../../Api/reservation';
 import dayjs from 'dayjs';
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -76,7 +76,6 @@ const Reservations = () => {
         }
         setWeekDays(weekDays);
     }
-    console.log('Grouped Reservations:', grouped);
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen font-sans relative">
             <div className="max-w-6xl mx-auto">
@@ -135,7 +134,7 @@ const Reservations = () => {
                                 )))}
                     </div>
 
-                   <button className="md:px-6 md:py-4 md:shadow-lg md:border md:border-blue-100 text-gray-700 md:rounded-3xl group transition-colors cursor-pointer"
+                    <button className="md:px-6 md:py-4 md:shadow-lg md:border md:border-blue-100 text-gray-700 md:rounded-3xl group transition-colors cursor-pointer"
                         onClick={() => {
                             const nextWeek = dayjs(Day).startOf('isoWeek').add(1, 'week').format('YYYY-MM-DD');
                             setDay(nextWeek);
@@ -143,7 +142,7 @@ const Reservations = () => {
 
                         }}
                     >
-                         <span className='flex items-center gap-2 md:text-base'><p className="hidden md:block">Next</p><ChevronsUp className="transform rotate-90 text-blue-600 group-hover:translate-x-3 transition-transform duration-200" /></span>
+                        <span className='flex items-center gap-2 md:text-base'><p className="hidden md:block">Next</p><ChevronsUp className="transform rotate-90 text-blue-600 group-hover:translate-x-3 transition-transform duration-200" /></span>
                     </button>
                 </div>
                 {Object.keys(grouped).length === 0 ? (
@@ -167,51 +166,119 @@ const Reservations = () => {
 
                             <div className=""> {/* Removed background/border here to allow rows to 'float' */}
                                 {/* Mobile View (Card List) */}
-                                <div className="block md:hidden divide-y divide-gray-100 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                                    {grouped[day].map((res, idx) => (
-                                        <div key={idx} className="p-6 space-y-5">
-                                            <div className="flex justify-between items-start">
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Time</p>
-                                                    <p className="text-sm font-black text-gray-900">
-                                                        {formatTime(res.start)} — {formatTime(res.end)}
+                                <div className="md:hidden flex flex-col gap-5">
+                                    {grouped[day].map((res, idx) => {
+
+                                        const current = sortedReservations.find(res =>
+                                            dayjs().isAfter(dayjs(res.start)) && dayjs().isBefore(dayjs(res.end))
+                                        );
+
+                                        const isCurrent = res._id === current?._id;
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`p-6 space-y-5 rounded-3xl shadow-sm border border-gray-100 ${isCurrent ? "bg-black text-white" : "bg-white"
+                                                    }`}
+                                            >
+
+                                                {/* Time + Status */}
+                                                <div className="flex justify-between items-start">
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                                            Schedule
+                                                        </p>
+
+                                                        <p className={`flex gap-2 items-center text-sm font-black ${isCurrent ? "text-white" : "text-gray-900"
+                                                            }`}>
+                                                            <Clock />{formatTime(res.start)} — {formatTime(res.end)}
+                                                        </p>
+                                                    </div>
+
+                                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
+                                                        {res.status || "Scheduled"}
+                                                    </span>
+                                                </div>
+
+
+                                                {/* Customer + Phone */}
+                                                <div className="grid grid-cols-2 gap-4">
+
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                                            Customer
+                                                        </p>
+
+                                                        <p className={`text-sm font-bold flex gap-2 items-center ${isCurrent ? "text-white" : "text-gray-700"
+                                                            }`}>
+                                                            <ContactRound /> {res.customerName || "N/A"}
+                                                        </p>
+                                                    </div>
+
+
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                                            Phone
+                                                        </p>
+
+                                                        <p className={`flex  gap-2 text-sm font-mono text-[13px] ${isCurrent ? "text-gray-300" : "text-gray-500"
+                                                            }`}>
+                                                            <Phone /> {res.CustomerNumber || "N/A"}
+                                                        </p>
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* Services */}
+                                                <div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                                        Services Included
                                                     </p>
-                                                </div>
-                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
-                                                    {res.status || 'Scheduled'}
-                                                </span>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</p>
-                                                    <p className="text-sm font-bold text-gray-700">{res.customerName || 'N/A'}</p>
+                                                    <ul className={`text-xs font-bold list-disc list-inside space-y-1 ${isCurrent ? "text-gray-200" : "text-gray-600"
+                                                        }`}>
+                                                        {res.services?.map((service, sIdx) => (
+                                                            <li key={sIdx}>
+                                                                {service}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
                                                 </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
-                                                    <p className="text-sm font-medium text-gray-500 font-mono text-[13px]">{res.CustomerNumber || 'N/A'}</p>
-                                                </div>
-                                            </div>
 
-                                            <div>
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Services Included</p>
-                                                <ul className="space-y-1">
-                                                    {res.services && res.services.map((service, sIdx) => (
-                                                        <li key={sIdx} className="text-xs font-bold text-gray-700 flex items-center gap-2">
-                                                            <span className="h-1.5 w-1.5 bg-gray-900 rounded-full" /> {service}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
 
-                                            <div className="pt-4 border-t border-gray-50 flex justify-between items-end">
-                                                <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Price</p>
-                                                    <p className="text-2xl font-black text-gray-900 leading-none">${res.total_price || '0.00'}</p>
+                                                {/* Price + Remaining */}
+                                                <div className="pt-4 border-t border-gray-100 flex justify-between items-end">
+
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                            Total Price
+                                                        </p>
+
+                                                        <p className={`text-2xl font-black leading-none ${isCurrent ? "text-white" : "text-gray-900"
+                                                            }`}>
+                                                            ${res.total_price || "0.00"}
+                                                        </p>
+                                                    </div>
+
+
+                                                    {isCurrent && (
+                                                        <div className="text-right">
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Remaining
+                                                            </p>
+
+                                                            <p className="font-BlackOps text-2xl leading-none text-red-700">
+                                                                {dayjs(res.end).diff(dayjs(), "minute")} min left
+                                                            </p>
+                                                        </div>
+                                                    )}
+
                                                 </div>
+
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
 
                                 {/* Desktop View (Floating Rows) */}
@@ -225,49 +292,80 @@ const Reservations = () => {
                                                 <th className="px-6 pb-2">Status</th>
                                                 <th className="px-6 pb-2">Services</th>
                                                 <th className="pr-8 pb-2 text-right">Total Price</th>
+
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm">
-                                            {grouped[day].map((res, idx) => (
-                                                <tr key={idx} className="group hover:translate-y-[-2px] transition-all duration-200 cursor-pointer">
-                                                    {/* First Cell: Left Rounding */}
-                                                    <td className="bg-white border-y border-l border-gray-100 rounded-l-[2rem] shadow-sm pl-8 pr-4 py-6">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-black text-gray-800 leading-none mb-1 group-hover:text-blue-600 transition-colors">
-                                                                {formatTime(res.start)}
-                                                            </span>
-                                                            <span className="text-[11px] font-bold text-gray-400 uppercase">
-                                                                to {formatTime(res.end)}
-                                                            </span>
-                                                        </div>
-                                                    </td>
+                                            {grouped[day].map((res, idx) => {
+                                                const current = sortedReservations.find(res =>
+                                                    dayjs().isAfter(dayjs(res.start)) && dayjs().isBefore(dayjs(res.end))
+                                                );
+                                                const isCurrent = res._id === current?._id;
+                                                const cellBg = isCurrent ? 'bg-black text-white border-color-white' : 'bg-white';
 
-                                                    {/* Middle Cells: Standard Background */}
-                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-bold text-gray-700">
-                                                        {res.customerName || 'N/A'}
-                                                    </td>
-                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6 font-mono text-gray-400 text-[13px] tracking-tighter">
-                                                        {res.CustomerNumber || 'N/A'}
-                                                    </td>
-                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
-                                                        <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
-                                                            {res.status || 'Scheduled'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="bg-white border-y border-gray-100 shadow-sm px-6 py-6">
-                                                        <ul className="text-[11px] font-bold text-gray-600 list-disc list-inside space-y-0.5">
-                                                            {res.services && res.services.map((service, sIdx) => (
-                                                                <li key={sIdx}>{service}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </td>
+                                                const remaining_time = () => {
 
-                                                    {/* Last Cell: Right Rounding */}
-                                                    <td className="bg-white border-y border-r border-gray-100 rounded-r-[2rem] shadow-sm pr-8 py-6 text-right">
-                                                        <span className="text-lg font-black text-gray-900">${res.total_price || '0.00'}</span>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                    let end = dayjs(current.end).add(1,'minutes')
+                                                    let bymin = end.diff(dayjs(), "minute")
+
+                                                    if(bymin == 1){
+                                                        return `${dayjs(current.end).diff(dayjs(), "second")} seconds left`
+                                                    } else {
+                                                        return `${bymin} minutes left`
+                                                    }
+                                                }
+                                                return (
+                                                    <tr key={idx} className="group hover:translate-y-[-2px] transition-all duration-200 cursor-pointer">
+                                                        {/* First Cell: Left Rounding */}
+                                                        <td className={`${cellBg} border-y border-l border-gray-100 rounded-l-[2rem] shadow-sm pl-8 pr-4 py-6`}>
+                                                            <div className="flex flex-col">
+                                                                <span className={`font-black leading-none mb-1 transition-colors ${isCurrent ? 'text-white' : 'text-gray-800 group-hover:text-blue-600'}`}>
+                                                                    {formatTime(res.start)}
+                                                                </span>
+                                                                <span className={`text-[11px] font-bold uppercase ${isCurrent ? 'text-gray-300' : 'text-gray-400'}`}>
+                                                                    to {formatTime(res.end)}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Middle Cells: Standard Background */}
+                                                        <td className={`${cellBg} border-y border-gray-100 shadow-sm px-6 py-6 font-bold ${isCurrent ? '' : 'text-gray-700'}`}>
+                                                            {res.customerName || 'N/A'}
+                                                        </td>
+                                                        <td className={`${cellBg} border-y border-gray-100 shadow-sm px-6 py-6 font-mono text-[13px] tracking-tighter ${isCurrent ? 'text-gray-300' : 'text-gray-400'}`}>
+                                                            {res.CustomerNumber || 'N/A'}
+                                                        </td>
+                                                        <td className={`${cellBg} border-y border-gray-100 shadow-sm px-6 py-6`}>
+                                                            <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider ${getStatusStyle(res.status)}`}>
+                                                                {res.status || 'Scheduled'}
+                                                            </span>
+                                                        </td>
+
+                                                        <td className={`${cellBg} border-y border-gray-100 shadow-sm px-6 py-6`}>
+                                                            <ul className={`text-[11px] font-bold list-disc list-inside space-y-0.5 ${isCurrent ? 'text-gray-200' : 'text-gray-600'}`}>
+                                                                {res.services && res.services.map((service, sIdx) => (
+                                                                    <li key={sIdx}>{service}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </td>
+
+                                                        {/* Last Cell: Right Rounding */}
+                                                        <td className={`${cellBg} ${!isCurrent ? 'border-y border-r border-gray-100 rounded-r-[2rem] ' : ' border-y border-gray-100'}shadow-sm pr-8 py-6 text-right`}>
+                                                            <span className={`text-lg font-black ${isCurrent ? 'text-white' : 'text-gray-900'}`}>
+                                                                ${res.total_price || '0.00'}
+                                                            </span>
+                                                        </td>
+
+                                                        <td className={`${cellBg} ${!isCurrent ? 'hidden' : ''} border-y border-r border-gray-100 rounded-r-[2rem] shadow-sm pr-8 py-6 text-right`}>
+                                                            <span className={`font-BlackOps text-2xl leading-none mb-1 ${isCurrent ? 'text-red-700' : 'text-gray-800'}`}>
+                                                                {current? remaining_time():''}
+                                                            </span>
+                                                        </td>
+
+                                                    </tr>
+                                                )
+
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -275,7 +373,7 @@ const Reservations = () => {
                         </div>
                     ))
                 )}
-            </div>
+            </div >
 
             {actionModalOpen &&
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" onClick={() => setActionModalOpen(false)}>
@@ -311,7 +409,7 @@ const Reservations = () => {
                 </div>
             }
 
-        </div>
+        </div >
     );
 };
 
