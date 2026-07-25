@@ -45,24 +45,38 @@ const RecenterMap = ({ center }) => {
 
 // --- SAMPLE DATA ---
 const sampleShops = [
-  { name: "Berber Ani", location: [41.335866, 19.790201], distance: 2453 },
-  { name: "Style Cut", location: [41.312194, 19.797072], distance: 1039 },
-  { name: "Modern Barber", location: [41.338102, 19.842231], distance: 912 },
-  { name: "Classic Cuts", location: [41.332930, 19.790607], distance: 967 },
-  { name: "Urban Fade", location: [41.310618, 19.819021], distance: 417 },
-  { name: "The Gentleman", location: [41.331175, 19.831661], distance: 4664 },
-  { name: "Sharp Edge", location: [41.322671, 19.815653], distance: 2478 },
-  { name: "Prime Barber", location: [41.346066, 19.789090], distance: 1507 },
-  { name: "Elite Cuts", location: [41.339388, 19.809115], distance: 1473 },
-  { name: "Barber House", location: [41.310419, 19.834510], distance: 1037 },
-  { name: "Fresh Look", location: [41.303065, 19.794503], distance: 3017 },
-  { name: "City Barber", location: [41.333724, 19.837128], distance: 3963 },
-  { name: "Royal Cuts", location: [41.329674, 19.847087], distance: 3300 },
-  { name: "Barber Studio", location: [41.302228, 19.806291], distance: 3162 },
-  { name: "Fade Masters", location: [41.332141, 19.830974], distance: 575 },
-];
+  {
+    "_id": "6946a13242bbc9e406bc8660",
+    "name": "Berber Klajdi",
+    "address": "Tirane, Rr.elbasanit",
+    "distance": 1332,
+    "location": [
+      41.32877522059865,
+      19.828135616669922
+    ]
+  },
+  {
+    "_id": "6a626d7398ed0c36107d2dd2",
+    "name": "Berber Ani",
+    "address": "Shkolla e baletit,Tirana",
+    "distance": 1351,
+    "location": [
+      41.32557194237967,
+      19.828262953373365
+    ]
+  },
+  {
+    "_id": "694fc3829dee317c7c722725",
+    "name": "Elite Barber Shop",
+    "address": "123 Main Street, Tirana",
+    "distance": 3341,
+    "location": [
+      41.331643318460806,
+      19.81023991846492
+    ]
+  }
+]
 
-const TIRANA_CENTER = [41.3275, 19.8187];
 
 function formatDistance(meters) {
   if (meters < 1000) return `${meters} m`;
@@ -80,11 +94,13 @@ const BarberShopMap = () => {
     return link
   }
 
-  console.log('my location',userPos)
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-      () => setUserPos(TIRANA_CENTER)
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]),
+          localStorage.setItem('location', [pos.coords.latitude, pos.coords.longitude])
+      },
+
     );
   }, []);
 

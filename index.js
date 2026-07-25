@@ -37,7 +37,7 @@ const Request = require('./routes/request');
 const Admin = require('./routes/Admin_Managment');
 const Barber_Statistics = require('./routes/Barber_Statistics');
 const User_Reservations = require('./routes/User_Reservations');
-
+const Maps = require('./routes/Maps');
 connectDB();
 
 app.use(cors({
@@ -55,6 +55,7 @@ app.use('/reservation-request', Request);
 app.use('/admin/managment/', Admin);
 app.use('/statistics', Barber_Statistics);
 app.use('/User-Reservations/',User_Reservations)
+app.use('/Maps/',Maps)
 
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
