@@ -6,18 +6,94 @@ const User = require('../models/User');
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware')
 const bcrypt = require('bcryptjs');
 const service = require('../models/service');
+const mongoose = require('mongoose')
 
-router.post('/addingshop', authMiddleware,
-    allowRoles('admin'), async (req, res) => {
-        const { name, address, phone, hours_start, hours_end, logo_url, services } = req.body;
+router.post(
+    "/addingshop",
+    authMiddleware,
+    allowRoles("admin"),
+    async (req, res) => {
         try {
-            const newShop = new Barber_Shop({ services, name, address, phone, hours_start, hours_end, logo_url });
-            await newShop.save();
-            res.status(201).json({ message: 'Barber shop created', newShop });
-        } catch (error) {
-            res.status(400).json({ message: 'Error creating barber shop', error: error.message });
+            const {
+                name,
+                address,
+                phone,
+                hours_start,
+                hours_end,
+                logo_url,
+                services = [],
+                Xloc,
+                Yloc,
+                shop_img,
+            } = req.body;
+        
+            if (!Array.isArray(services) || services.length === 0) {
+                return res.status(400).json({
+                    message: "Services are required.",
+                });
+            }
+
+            const serviceIds = services.map(({ id }) => id);
+
+            // Prevent duplicate services
+            if (new Set(serviceIds).size !== serviceIds.length) {
+                return res.status(400).json({
+                    message: "Duplicate services are not allowed.",
+                });
+            }
+
+            // Fetch all requested services
+            const dbServices = await service.find({
+                _id: { $in: serviceIds },
+            }).lean();
+
+            if (dbServices.length !== serviceIds.length) {
+                return res.status(400).json({
+                    message: "One or more services are invalid.",
+                });
+            }
+
+            // Fast lookup
+            const serviceMap = new Map(
+                dbServices.map(service => [
+                    service._id.toString(),
+                    service,
+                ])
+            );
+
+            const full_service_list = services.map(({ id, price }) => ({
+                service: id,
+                service_name: serviceMap.get(id).name,
+                price,
+            }));
+
+            const newShop = await Barber_Shop.create({
+                name,
+                address,
+                phone,
+                hours_start,
+                hours_end,
+                logo_url,
+                location: {
+                    type: 'Point',
+                    coordinates: [Xloc, Yloc]
+                },
+                shop_img,
+                services: full_service_list,
+            });
+
+            return res.status(201).json({
+                message: "Barber shop created.",
+                shop: newShop,
+            });
+        } catch (err) {
+            return res.status(500).json({
+                message: "Error creating barber shop.",
+                error: err.message,
+            });
         }
-    });
+    }
+);
 
 router.post(
     '/add-barber',

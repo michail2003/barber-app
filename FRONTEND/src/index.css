@@ -49,3 +49,25 @@
 .animate-TimeChangeDown {
   animation: TimeChangeDown 0.5s ease-in-out;
 }
+
+/* Custom scrollbar for list sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+
+/* Custom styling for Leaflet Popups to match modern UI */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  padding: 4px !important;
+}
+.leaflet-popup-tip {
+  background: white !important;
+}

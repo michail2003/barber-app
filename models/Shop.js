@@ -4,14 +4,14 @@ const service = require("./service");
 
 const ServiceCatalog = new mongoose.Schema(
   {
-    service:{
+    service: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Service',
     },
-    price:{
+    price: {
       type: Number
     },
-    service_name:{
+    service_name: {
       type: String
     }
   }
@@ -33,6 +33,10 @@ const BarberShopSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    location: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number], required: true } // [lng, lat], used for queries/map
+    },
     phone: {
       type: String,
       required: true,
@@ -50,6 +54,10 @@ const BarberShopSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    shop_img: {
+      type: String,
+      trim: true
+    },
     services: [ServiceCatalog],
   },
   { timestamps: true }
@@ -61,5 +69,6 @@ BarberShopSchema.pre("save", function () {
   this.slug = `${this.name}-${suffix}`;
 
 });
+BarberShopSchema.index({location: '2dsphere'})
 
 module.exports = mongoose.model("BarberShop", BarberShopSchema);

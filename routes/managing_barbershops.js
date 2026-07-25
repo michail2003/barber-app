@@ -7,18 +7,6 @@ const { allowRoles, authMiddleware } = require('../middleware/auth_middleware')
 const bcrypt = require('bcryptjs');
 const service = require('../models/service');
 
-router.post('/addingshop', authMiddleware,
-    allowRoles('admin'), async (req, res) => {
-        const { name, address, phone, hours_start, hours_end, logo_url, services } = req.body;
-        try {
-            const newShop = new Barber_Shop({ services, name, address, phone, hours_start, hours_end, logo_url });
-            await newShop.save();
-            res.status(201).json({ message: 'Barber shop created', newShop });
-        } catch (error) {
-            res.status(400).json({ message: 'Error creating barber shop', error: error.message });
-        }
-    });
-
 router.post(
     '/add-barber',
     authMiddleware,
@@ -46,11 +34,11 @@ router.post(
             const allServicesValid = services.every(service =>
                 shopServicesIds.includes(service.service.toString())
             );
-            
+
             if (!allServicesValid) {
                 return res.status(400).json({ message: 'you must add services from shop' });
             }
-            
+
             const full_service_list = services.map(s => ({
                 service: s.service,
                 service_name: shop.services.find(ss => ss._id.toString() === s.service.toString()).service_name,
@@ -85,7 +73,7 @@ router.post(
                 shopId,
                 hours_start,
                 hours_end,
-                services : full_service_list
+                services: full_service_list
             });
 
             res.status(201).json({
