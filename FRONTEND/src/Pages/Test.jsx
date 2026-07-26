@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { shops_hartography } from '../Api/Maps';
 
 // --- CUSTOM SVG MARKERS ---
 // Indigo pin for Barber Shops
@@ -43,40 +44,6 @@ const RecenterMap = ({ center }) => {
   return null;
 };
 
-// --- SAMPLE DATA ---
-const sampleShops = [
-  {
-    "_id": "6946a13242bbc9e406bc8660",
-    "name": "Berber Klajdi",
-    "address": "Tirane, Rr.elbasanit",
-    "distance": 1332,
-    "location": [
-      41.32877522059865,
-      19.828135616669922
-    ]
-  },
-  {
-    "_id": "6a626d7398ed0c36107d2dd2",
-    "name": "Berber Ani",
-    "address": "Shkolla e baletit,Tirana",
-    "distance": 1351,
-    "location": [
-      41.32557194237967,
-      19.828262953373365
-    ]
-  },
-  {
-    "_id": "694fc3829dee317c7c722725",
-    "name": "Elite Barber Shop",
-    "address": "123 Main Street, Tirana",
-    "distance": 3341,
-    "location": [
-      41.331643318460806,
-      19.81023991846492
-    ]
-  }
-]
-
 
 function formatDistance(meters) {
   if (meters < 1000) return `${meters} m`;
@@ -84,7 +51,7 @@ function formatDistance(meters) {
 }
 
 const BarberShopMap = () => {
-  const [shops] = useState(sampleShops);
+  const [shops, setShops] = useState([]);
   const [userPos, setUserPos] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedShop, setSelectedShop] = useState(null);
@@ -94,15 +61,24 @@ const BarberShopMap = () => {
     return link
   }
 
+  //getting shops from api
+  async function shops_data_maps(lat, lng) {
+    const data = await shops_hartography(lat, lng)
+    setShops(data)
+  }
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserPos([pos.coords.latitude, pos.coords.longitude]),
-          localStorage.setItem('location', [pos.coords.latitude, pos.coords.longitude])
+        setUserPos([pos.coords.latitude, pos.coords.longitude])
+        localStorage.setItem('location', [pos.coords.latitude, pos.coords.longitude])
+        shops_data_maps(pos.coords.latitude, pos.coords.longitude)
       },
 
     );
+
   }, []);
+  console.log(shops)
 
   // Filter and sort shops
   const filteredShops = useMemo(() => {
