@@ -36,6 +36,9 @@ const BarberSchema = new mongoose.Schema({
     hours_end: {
     type:String,
   },
+  ph_number:{
+    type:String,
+  },
   services: [BarberServiceSchema],
 
   reservations: [{

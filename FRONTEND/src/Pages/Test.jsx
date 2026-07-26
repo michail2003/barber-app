@@ -78,7 +78,6 @@ const BarberShopMap = () => {
     );
 
   }, []);
-  console.log(shops)
 
   // Filter and sort shops
   const filteredShops = useMemo(() => {

@@ -127,6 +127,8 @@ router.get('/:slug/barbers', async (req, res) => {
             barbers.map(barber => ({
                 id: barber._id,
                 name: barber.userId.name,
+                working_hours: [barber.hours_start,barber.hours_end],
+                phone: barber.userId.ph_number
             }))
         );
     } catch (error) {
