@@ -90,6 +90,12 @@ export function UserNav() {
           Add Barber
         </Link>
       </ProtectedButton>
+
+      <ProtectedButton roles={['barber_admin']}>
+        <Link to={`/edit-shop`} className={navItemStyles(`/edit-shop`)}>
+          Edit BarberShop
+        </Link>
+      </ProtectedButton>
     </>
   );
 

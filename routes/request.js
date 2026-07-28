@@ -6,6 +6,7 @@ const Barber = require('../models/barber');
 const dayjs = require('dayjs');
 const axios = require("axios");
 const port = process.env.PORT || 3000;
+const {authMiddleware,allowRoles }= require('../middleware/auth_middleware')
 
 
 function isOverlapping(start1, end1, start2, end2) {
@@ -151,7 +152,7 @@ router.post('/', async (req, res) => {
 
         const io = req.app.get('io');
         io.to(`barber:${barberId}`).emit('new-request', request);
-        
+
         res.status(201).json({
             message: 'Request sent successfully',
             request
@@ -197,19 +198,21 @@ router.put('/:id/', async (req, res) => {
 });
 
 // Get all requests for a specific barber
-router.get('/barber-requests/:id/', async (req, res) => {
-    try {
-        const { id } = req.params;
+router.get('/barber-requests/:id/',
+    authMiddleware,
+    allowRoles('barber','barber_admin'), async (req, res) => {
+        try {
+            const { id } = req.params;
 
-        const requests = await Request.find({ barberId: id }).populate('userid', 'name ph_number');
-        if (requests.length === 0) {
-            return res.status(404).json({ message: 'No requests found for this barber' });
+            const requests = await Request.find({ barberId: id }).populate('userid', 'name ph_number');
+            if (requests.length === 0) {
+                return res.status(404).json({ message: 'No requests found for this barber' });
+            }
+            res.status(200).json({ requests });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Server error', err: err.message });
         }
-        res.status(200).json({ requests });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error', err: err.message });
-    }
-});
+    });
 
 module.exports = router;

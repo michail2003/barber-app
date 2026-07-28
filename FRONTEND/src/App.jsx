@@ -9,8 +9,9 @@ import StaffDetails from "./Pages/Shop/StaffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
 import Test from './Pages/Test'
-import ShopStats  from "./Pages/Shop/ShopStats";
+import ShopStats from "./Pages/Shop/ShopStats";
 import Reservations from "./Pages/Shop/Reservations";
+import Edit_Shop from "./Pages/Shop/Edit_Shop";
 import Request_window from "./components/Request_window";
 import axios from "axios";
 import User_not_found from "./components/User_not_found";
@@ -71,6 +72,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path='/edit-shop' element={<ProtectedRoute allowedRoles={['barber_admin', 'admin']}>
+          <Edit_Shop/>
+        </ProtectedRoute>} />
       </Routes>
     </>
   )

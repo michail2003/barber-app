@@ -63,15 +63,6 @@ const Map = ({ shop }) => {
         );
     }, []);
 
-
-    if (!userPos) {
-        return (
-            <div className="lg:col-span-7 h-[400px] flex items-center justify-center border rounded-2xl">
-                Loading map...
-            </div>
-        );
-    }
-
     return (
         <div className="lg:col-span-7 h-full min-h-[400px] rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative">
             <MapContainer
@@ -90,13 +81,15 @@ const Map = ({ shop }) => {
                     noWrap={true}
                 />
 
-                <Marker position={userPos} icon={userIcon}>
-                    <Popup>
-                        <div className="text-xs font-semibold text-slate-800">
-                            Your Location
-                        </div>
-                    </Popup>
-                </Marker>
+                {userPos &&
+                    <Marker position={userPos} icon={userIcon}>
+                        <Popup>
+                            <div className="text-xs font-semibold text-slate-800">
+                                Your Location
+                            </div>
+                        </Popup>
+                    </Marker>
+                }
 
                 <Marker
                     position={shop.location.coordinates}
