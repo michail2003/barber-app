@@ -16,6 +16,7 @@ import Request_window from "./components/Request_window";
 import axios from "axios";
 import User_not_found from "./components/User_not_found";
 import { use, useEffect, useState } from "react";
+import { ProtectedButton } from "../src/components/ProtectedButton";
 
 function App() {
   const token = localStorage.getItem('token');
@@ -29,7 +30,12 @@ function App() {
       <UserNav />
       <br />
       <br />
-      <Request_window />
+
+      <ProtectedButton roles={['barber_admin','barber']}>
+        <Request_window />
+      </ProtectedButton>
+
+
       <Routes>
 
         <Route path='/' element={<Home />} />
@@ -74,7 +80,7 @@ function App() {
         />
 
         <Route path='/edit-shop' element={<ProtectedRoute allowedRoles={['barber_admin', 'admin']}>
-          <Edit_Shop/>
+          <Edit_Shop />
         </ProtectedRoute>} />
       </Routes>
     </>

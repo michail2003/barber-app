@@ -172,7 +172,7 @@ export default function Edit_Shop() {
   const activeServiceIds = formData.services.map((s) => s.service);
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans pb-16">
+    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans pb-16 mt-10">
       
       {/* Top Header Navbar */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-sm">
