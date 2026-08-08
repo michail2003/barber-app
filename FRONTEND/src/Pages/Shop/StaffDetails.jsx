@@ -244,7 +244,7 @@ const StaffDetails = () => {
                 </div>
             )}
             {isServiceEditOpen && selectedBarber && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto" onClick={()=> setIsServiceEditOpen(false)}>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto" onClick={() => setIsServiceEditOpen(false)}>
                     <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold mb-6 flex items-center text-indigo-700">
                             <span className="bg-indigo-100 p-1.5 rounded-md mr-2">✂️</span>
@@ -310,6 +310,8 @@ const StaffDetails = () => {
                                     </div>
                                 );
                             })}
+
+                            <button onClick={()=>handleSave()} className="flex-[2] bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">Update Profile</button>
                         </div>
                     </section>
                 </div>

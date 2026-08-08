@@ -12,10 +12,10 @@ const BarberServiceSchema = new mongoose.Schema({
     required: true
   },
   service_name: {
-    type:String
+    type: String
   },
-  price:{
-    type:Number
+  price: {
+    type: Number
   }
 });
 /* ---------------- BARBER ---------------- */
@@ -31,13 +31,13 @@ const BarberSchema = new mongoose.Schema({
     required: true
   },
   hours_start: {
-    type:String,
+    type: String,
   },
-    hours_end: {
-    type:String,
+  hours_end: {
+    type: String,
   },
-  ph_number:{
-    type:String,
+  ph_number: {
+    type: String,
   },
   services: [BarberServiceSchema],
 
@@ -46,11 +46,13 @@ const BarberSchema = new mongoose.Schema({
     ref: "Reservation"
   }],
 
-    requests: [{
+  requests: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Request"
   }],
-  
+
 }, { timestamps: true });
+
+BarberSchema.index({ shopId: 1 });
 
 module.exports = mongoose.model("Barber", BarberSchema);

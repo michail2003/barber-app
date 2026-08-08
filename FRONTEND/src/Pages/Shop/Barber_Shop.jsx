@@ -5,7 +5,9 @@ import { sendRequest } from '../../Api/Requests';
 import { barbers_available } from '../../Api/reservation';
 import TimePicker from '../../components/TimePicker';
 import Map from '../../components/Map';
-import { Phone } from 'lucide-react';
+import ReviewsSection from '../../components/Reviews';
+import GallerySection from '../../components/InstagramGallery';
+import { Phone, CalendarPlus, ShoppingBag, Star, Images, } from 'lucide-react';
 
 const Barber_Shop = () => {
     const [selectedServices, setSelectedServices] = useState([]);
@@ -27,9 +29,12 @@ const Barber_Shop = () => {
 
 
     const sections = [
-        { secID: 1, header: "Reservation", },
-        { secID: 2, header: "Store", },
-        { secID: 3, header: "Contact & location", },
+        { secID: 1, header: "Reservation", icon: <CalendarPlus className={`size-4`} />, selected: <CalendarPlus /> },
+        { secID: 2, header: "Store", icon: <ShoppingBag className={`size-4`} />, selected: <ShoppingBag /> },
+        { secID: 3, header: "Gallery", icon: <Images className={`size-4`} />, selected: <Images /> },
+        { secID: 4, header: "Reviews", icon: <Star className={`size-4`} />, selected: <Star /> },
+        { secID: 5, header: "Contact", icon: <Phone className={`size-4`} />, selected: <Phone /> },
+
     ]
 
     async function handleReservation() {
@@ -85,8 +90,6 @@ const Barber_Shop = () => {
         }
         return days;
     };
-
-    console.log(Barbers)
 
     function AddServices(id) {
         if (!selectedServices.includes(id)) {
@@ -188,7 +191,7 @@ const Barber_Shop = () => {
 
             {/* bar sections */}
             <div className="max-w-xl mx-auto my-6 p-1.5 bg-slate-200/60 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-inner">
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                     {sections.map((s) => {
                         const selected = s.secID === currentSection;
                         return (
@@ -202,12 +205,23 @@ const Barber_Shop = () => {
                             >
                                 {/* Subtle active accent indicator dot */}
                                 {selected && (
-                                    <span className="absolute left-3 w-1.5 h-1.5 rounded-full bg-indigo-600 shadow-sm shadow-indigo-500/50" />
+                                    <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-indigo-500" />
                                 )}
 
-                                <span className={`truncate ${selected ? 'pl-2 transition-all' : ''}`}>
-                                    {s.header}
-                                </span>
+                                {!selected ? (
+                                    <>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-slate-400">{s.icon}</span>
+                                            <span className="truncate">{s.header}</span>
+
+                                        </div>
+                                    </>
+                                ) : (
+                                    <span className="truncate">
+                                        {s.selected}
+                                    </span>
+                                )}
+
                             </button>
                         );
                     })}
@@ -433,13 +447,26 @@ const Barber_Shop = () => {
 
             {/* section 2 (store) */}
             {currentSection === 2 &&
-                <div>
-                    <h1>store sections....</h1>
+                <div className="md:mx-20 p-4 md:p-8 rounded-2xl shadow-lg border border-indigo-200">
+                    
                 </div>
             }
 
-            {/* section 3 (info) */}
-            {currentSection === 3 && (
+            {currentSection === 3 &&
+                <div className="md:mx-20 p-4 md:p-8 rounded-2xl shadow-lg border border-indigo-200">
+                    <GallerySection />
+                </div>
+            }
+
+            {/* section 4 (reviews) */}
+            {currentSection === 4 &&
+                <div className="md:mx-120 p-4 md:p-8 rounded-2xl shadow-lg border border-indigo-200">
+                    <ReviewsSection />
+                </div>
+            }
+
+            {/* section 5 (info) */}
+            {currentSection === 5 && (
                 <div className="w-full max-w-6xl mx-auto my-8 p-4 md:p-8 bg-slate-50 text-slate-800 rounded-2xl shadow-lg border border-slate-200/80">
                     <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch min-h-[500px] md:h-[700px]">
 

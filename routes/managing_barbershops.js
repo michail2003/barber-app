@@ -5,7 +5,10 @@ const Barber = require('../models/barber');
 const User = require('../models/User');
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware')
 const bcrypt = require('bcryptjs');
-const service = require('../models/service');
+const Service = require('../models/service');
+const { find_in_db, isValidLatLng } = require('../global_functions');
+const { adding_services_to_shop, validate_Shop_Hours } = require('../Barber_Shops_Functions');
+const Shop = require('../models/Shop');
 
 router.post(
     '/add-barber',
@@ -127,7 +130,7 @@ router.get('/:slug/barbers', async (req, res) => {
             barbers.map(barber => ({
                 id: barber._id,
                 name: barber.userId.name,
-                working_hours: [barber.hours_start,barber.hours_end],
+                working_hours: [barber.hours_start, barber.hours_end],
                 phone: barber.userId.ph_number
             }))
         );
@@ -135,6 +138,72 @@ router.get('/:slug/barbers', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+
+router.put('/shop-editing/info/:shopID', async (req, res) => {
+    try {
+        const {
+            name,
+            phone,
+            hours_start,
+            hours_end,
+            address,
+            location,
+            shop_img,
+            logo_url,
+            services
+        } = req.body;
+
+        //finding shop
+        const shop = await find_in_db(Shop, req.params.shopID, res, 'shop not found')
+
+        if (services) {
+
+            const error = await adding_services_to_shop(services,Service);
+            if (error) {
+                return res.status(400).json({ message: error });
+            }
+        }
+        if (location && !isValidLatLng(location)) {
+            return res.status(400).json({ message: 'Invalid location coordinates' });
+        }
+
+        const geoLocation = location
+            ? { type: 'Point', coordinates: [location[1], location[0]] } // swap to [lng, lat]
+            : undefined;
+
+        if (hours_start && hours_end) {
+
+            const barbers = await Barber.find({ shopId: shop._id }) //index search on barbers by shopID
+                .select("name hours_start hours_end");
+
+            const error = validate_Shop_Hours(hours_start, hours_end, barbers);
+            if (error) {
+                return res.status(400).json({ message: error.message, conflicts: error.conflicts });
+            }
+        }
+
+        const shop_updated = await Barber_Shop.findByIdAndUpdate(shop._id, {
+            name,
+            phone,
+            hours_start,
+            hours_end,
+            address,
+            location: geoLocation,
+            shop_img,
+            logo_url,
+            services
+        }, { new: true })
+
+        if (!shop_updated) {
+            return res.status(400).json({ message: 'updating shop failed' });
+        }
+
+        res.status(200).json({ message: 'Shop updated successfully', shop: shop_updated });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+})
 
 
 module.exports = router;

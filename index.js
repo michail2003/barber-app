@@ -31,7 +31,7 @@ const shops = require('./routes/shops');
 const addbarbershop = require('./routes/managing_barbershops');
 const reservation = require('./routes/reservation');
 const User = require('./routes/auth');
-const feature = require('./routes/A_Barber_features')
+const staff_managment = require('./routes/managing_staff')
 const Services = require('./routes/services')
 const Request = require('./routes/request');
 const Admin = require('./routes/Admin_Managment');
@@ -49,7 +49,7 @@ app.use('/userview-shops', shops);
 app.use('/manage-barbershop', addbarbershop);
 app.use('/reservations', reservation);
 app.use('/user-managment', User);
-app.use('/staff-managment', feature);
+app.use('/staff-managment', staff_managment);
 app.use('/managing-services', Services);
 app.use('/reservation-request', Request);
 app.use('/admin/managment/', Admin);
