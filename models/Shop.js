@@ -59,6 +59,15 @@ const BarberShopSchema = new mongoose.Schema(
       trim: true
     },
     services: [ServiceCatalog],
+    
+    instagram: {
+      connected: { type: Boolean, default: false },
+      accessToken: { type: String, select: false }, // select:false so it's never returned by default queries
+      instagramUserId: { type: String },
+      username: { type: String },
+      tokenExpiresAt: { type: Date },
+      lastSyncedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );
@@ -69,6 +78,6 @@ BarberShopSchema.pre("save", function () {
   this.slug = `${this.name}-${suffix}`;
 
 });
-BarberShopSchema.index({location: '2dsphere'})
+BarberShopSchema.index({ location: '2dsphere' })
 
 module.exports = mongoose.model("BarberShop", BarberShopSchema);
