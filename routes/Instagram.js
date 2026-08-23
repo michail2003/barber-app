@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Shop = require('../models/Shop');
 
 // GET /api/auth/instagram/connect/:shopId
 router.get('/instagram/connect/:shopId', (req, res) => {
@@ -11,7 +12,6 @@ router.get('/instagram/connect/:shopId', (req, res) => {
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('scope', 'instagram_business_basic');
     authUrl.searchParams.set('state', shopId); // pass shopId through so callback knows which shop to update
-
     res.redirect(authUrl.toString());
 });
 
@@ -101,7 +101,7 @@ router.get('/:shopId/instagram', async (req, res) => {
 
         // fetch profile info (followers, following, media count, username)
         const profileRes = await fetch(
-            `https://graph.instagram.com/${instagramUserId}?fields=username,account_type,media_count,followers_count,follows_count&access_token=${accessToken}`
+            `https://graph.instagram.com/me?fields=user_id,username,account_type,media_count,followers_count,follows_count&access_token=${accessToken}`
         );
         const profileData = await profileRes.json();
 
