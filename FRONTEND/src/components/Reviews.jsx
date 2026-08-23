@@ -1,64 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { getShopReviews, postShopReview } from "../Api/Reviews";
 
+dayjs.extend(relativeTime);
 
-// sampleReviewsData.js
-const currentUser = "Michael"
-
-const storeStats = {
-    averageRating: 4.8,
-    totalReviews: 128,
-    breakdown: {
-        5: 85,
-        4: 32,
-        3: 7,
-        2: 3,
-        1: 1,
-    },
+const defaultBreakdown = {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
 };
 
-const sampleReviews = [
-    {
-        id: "rev-1",
-        name: "Alexander Wright",
-        date: "2 days ago",
-        rating: 5,
-        comment:
-            "Exceptional service! The atmosphere was welcoming, and the attention to detail was top-notch. Highly recommended.",
-        source: "google",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
-    },
-    {
-        id: "rev-2",
-        name: "Elena Rostova",
-        date: "1 week ago",
-        rating: 5,
-        comment:
-            "Super easy booking process and clean design. Will definitely be coming back again!",
-        source: "app",
-        avatar: null,
-    },
-    {
-        id: "rev-3",
-        name: "Marcus Chen",
-        date: "2 weeks ago",
-        rating: 4,
-        comment:
-            "Great overall experience. Quick, professional, and very polite staff.",
-        source: "google",
-        avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80",
-    },
-    {
-        id: "rev-4",
-        name: "Sarah Jenkins",
-        date: "1 month ago",
-        rating: 5,
-        comment:
-            "Best service in town hands down. Clean facility and punctual timings.",
-        source: "app",
-        avatar: null,
-    },
-];
-// Reusable SVG Star Component
+const formatReviewDate = (date) => {
+    if (!date) return "Just now";
+    const parsedDate = dayjs(date);
+    return parsedDate.isValid() ? parsedDate.fromNow() : "Just now";
+};
+
+const normalizeReview = (review, index = 0) => ({
+    id: review?._id || review?.id || `rev-${index}-${Date.now()}`,
+    name: review?.user || review?.name || "Anonymous",
+    date: formatReviewDate(review?.date),
+    rating: Number(review?.rating) || 0,
+    comment: review?.comment || "",
+    source: review?.source || "fringo",
+    avatar: review?.userImage || review?.avatar || null,
+});
+
+const buildBreakdown = (reviewList) => {
+    const breakdown = { ...defaultBreakdown };
+
+    reviewList.forEach((review) => {
+        const rating = Number(review.rating);
+        if (rating >= 1 && rating <= 5) {
+            breakdown[Math.round(rating)] += 1;
+        }
+    });
+
+    return breakdown;
+};
+
 const StarIcon = ({ filled, onClick, onMouseEnter, onMouseLeave, className = "w-5 h-5" }) => (
     <svg
         onClick={onClick}
@@ -71,29 +54,70 @@ const StarIcon = ({ filled, onClick, onMouseEnter, onMouseLeave, className = "w-
     </svg>
 );
 
-export default function ReviewsSection() {
-    const [reviews, setReviews] = useState(sampleReviews);
+export default function ReviewsSection({ shopId }) {
+    const [reviews, setReviews] = useState([]);
+    const [storeStats, setStoreStats] = useState({
+        averageRating: 0,
+        totalReviews: 0,
+        breakdown: { ...defaultBreakdown },
+    });
     const [rating, setRating] = useState(5);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e) => {
+    const fetchReviews = async () => {
+        if (!shopId) return;
+
+        try {
+            const response = await getShopReviews(shopId);
+            const reviewList = (response?.reviews || []).map((review, index) => normalizeReview(review, index));
+
+            setReviews(reviewList);
+            setStoreStats({
+                averageRating: Number(response?.avgRating || 0),
+                totalReviews: reviewList.length,
+                breakdown: buildBreakdown(reviewList),
+            });
+        } catch (error) {
+            console.error("Error loading shop reviews:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchReviews();
+    }, [shopId]);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!comment.trim()) return;
 
-        const newReview = {
-            id: `rev-${Date.now()}`,
-            name: currentUser, // Automatically assigns logged in user
-            date: "Just now",
-            rating: rating,
-            comment: comment,
-            source: "app",
-            avatar: null,
-        };
+        const userId = localStorage.getItem("id") || localStorage.getItem("userId");
+        if (!userId || !shopId) {
+            alert("Please log in to leave a review.");
+            return;
+        }
 
-        setReviews([newReview, ...reviews]);
-        setComment("");
-        setRating(5);
+        setIsSubmitting(true);
+
+        try {
+            await postShopReview(shopId, {
+                UserID: userId,
+                ShopID: shopId,
+                rating,
+                comment: comment.trim(),
+            });
+
+            setComment("");
+            setRating(5);
+            setHoverRating(0);
+            await fetchReviews();
+        } catch (error) {
+            console.error("Failed to submit review:", error);
+            alert("Unable to post review right now.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -177,9 +201,10 @@ export default function ReviewsSection() {
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        className="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition active:scale-[0.98]"
+                        disabled={isSubmitting}
+                        className={`px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition active:scale-[0.98] ${isSubmitting ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
-                        Post Review
+                        {isSubmitting ? "Posting..." : "Post Review"}
                     </button>
                 </div>
             </form>
@@ -207,7 +232,7 @@ export default function ReviewsSection() {
                                         />
                                     ) : (
                                         <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 font-bold text-sm flex items-center justify-center uppercase border border-indigo-100">
-                                            {rev.name.charAt(0)}
+                                            {rev.name?.charAt(0) || "A"}
                                         </div>
                                     )}
 

@@ -461,7 +461,7 @@ const Barber_Shop = () => {
             {/* section 4 (reviews) */}
             {currentSection === 4 &&
                 <div className="md:mx-120 p-4 md:p-8 rounded-2xl shadow-lg border border-indigo-200">
-                    <ReviewsSection />
+                    <ReviewsSection shopId={Shop?._id} />
                 </div>
             }
 
