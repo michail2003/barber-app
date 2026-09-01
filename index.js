@@ -28,7 +28,7 @@ io.on('connection', (socket) => {
 })
 
 const shops = require('./routes/shops');
-const addbarbershop = require('./routes/managing_barbershops');
+const shop_manager = require('./routes/managing_barbershops');
 const reservation = require('./routes/reservation');
 const User = require('./routes/auth');
 const staff_managment = require('./routes/managing_staff')
@@ -48,7 +48,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/userview-shops', shops);
-app.use('/manage-barbershop', addbarbershop);
+app.use('/shop-manager', shop_manager);
 app.use('/reservations', reservation);
 app.use('/user-managment', User);
 app.use('/staff-managment', staff_managment);

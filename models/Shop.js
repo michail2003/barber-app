@@ -50,11 +50,11 @@ const BarberShopSchema = new mongoose.Schema(
       type: String,
       require: true
     },
-    logo_url: {
+    profile_pic: {
       type: String,
       trim: true
     },
-    shop_img: {
+    cover_photo: {
       type: String,
       trim: true
     },
