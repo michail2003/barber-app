@@ -169,7 +169,7 @@ const Barber_Shop = () => {
             {/* Hero Section */}
             <div className="relative w-full h-64 sm:h-80 md:h-96 overflow-hidden shadow-2xl bg-gray-900 group">
                 <img
-                    src={Shop.logo_url}
+                    src={Shop.cover_photo}
                     alt='Hero'
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 object-center"
                 />

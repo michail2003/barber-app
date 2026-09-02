@@ -78,7 +78,7 @@ router.get('/instagram/callback', async (req, res) => {
         }
 
         // 4. redirect back to your frontend dashboard
-        res.redirect(`${process.env.FRONTEND_URL}/dashboard?ig=connected`);
+        res.redirect(`http://localhost:5173/${shop.slug}`);
     } catch (err) {
         console.error('Instagram callback error:', err);
         res.status(500).json({ error: 'Something went wrong connecting Instagram' });

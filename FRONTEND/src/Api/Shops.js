@@ -1,6 +1,6 @@
 import axios from 'axios';
 const API_URL = 'http://localhost:5000/userview-shops';
-const API_Shop = "http://localhost:5000/manage-barbershop";
+const API_Shop = "http://localhost:5000/shop-manager";
 const API_Services = "http://localhost:5000/managing-services";
 
 async function getShops() {
@@ -20,6 +20,7 @@ async function getShops() {
 async function getShop(slug) {
     try {
         const response = await axios.get(`${API_Shop}/${slug}`);
+        console.log('Shop data:', response.data);   
         return response.data;
     } catch (error) {
         console.error('Error finding shop:', error);
@@ -56,4 +57,14 @@ async function getcatalog(id) {
         throw error;
     }
 }
-export { getShops,addShop,getShop,getbarbers,getcatalog };
+
+async function editShop(shopID, updatedData) {
+    try {
+        const response = await axios.put(`${API_Shop}/shop-editing/info/${shopID}`, updatedData);
+        return response.data;
+    } catch (error) {
+        console.error('Error editing shop:', error);
+        throw error;
+    }
+}
+export { getShops,addShop,getShop,getbarbers,getcatalog,editShop };
