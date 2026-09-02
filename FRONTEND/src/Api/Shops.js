@@ -58,7 +58,7 @@ async function getcatalog(id) {
     }
 }
 
-async function editShop(shopID, updatedData) {
+async function edit_shop(shopID, updatedData) {
     try {
         const response = await axios.put(`${API_Shop}/shop-editing/info/${shopID}`, updatedData);
         return response.data;
@@ -67,4 +67,4 @@ async function editShop(shopID, updatedData) {
         throw error;
     }
 }
-export { getShops,addShop,getShop,getbarbers,getcatalog,editShop };
+export { getShops,addShop,getShop,getbarbers,getcatalog,edit_shop };

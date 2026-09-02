@@ -169,17 +169,20 @@ router.put('/shop-editing/info/:shopID',
 
             if (services) {
 
+                services = JSON.parse(services);
+
                 const error = await adding_services_to_shop(services, Service);
                 if (error) {
                     return res.status(400).json({ message: error });
                 }
             }
-            if (location && !isValidLatLng(location)) {
+            
+            if (location && !isValidLatLng(JSON.parse(location))) {
                 return res.status(400).json({ message: 'Invalid location coordinates' });
             }
 
             const geoLocation = location
-                ? { type: 'Point', coordinates: [location[1], location[0]] } // swap to [lng, lat]
+                ? { type: 'Point', coordinates: [JSON.parse(location)[1], JSON.parse(location)[0]] } // swap to [lng, lat]
                 : undefined;
 
             if (hours_start && hours_end) {
