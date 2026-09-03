@@ -28,8 +28,6 @@ function App() {
     <>
       <User_not_found />
       <UserNav />
-      <br />
-      <br />
 
       <ProtectedButton roles={['barber_admin','barber']}>
         <Request_window />

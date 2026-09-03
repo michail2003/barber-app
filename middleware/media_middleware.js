@@ -33,7 +33,7 @@ const uploadSize = multer({
 });
 
 const uploadRateLimit = rateLimit({
-    windowMs: 10 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     max: 5,
     message: {
         message: 'Too many upload requests. Please try again later.'
