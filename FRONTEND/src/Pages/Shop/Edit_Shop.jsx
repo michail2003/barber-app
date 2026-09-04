@@ -105,11 +105,11 @@ const Edit_Shop = () => {
     <div className="min-h-screen bg-gray-100 text-gray-900 pb-12 pt-10">
       {/* Facebook Style Cover & Profile Header Header */}
       <div className="max-w-5xl mx-auto bg-white shadow-sm mb-6">
-        <div className="relative w-full h-48 sm:h-72 md:h-96 bg-gray-200 group">
+        <div className="relative w-full h-48 sm:h-72 md:h-96 bg-gray-200 group overflow-hidden">
           <img
             src={modifiedSlots.cover_photo ? URL.createObjectURL(modifiedSlots.cover_photo) : shop?.cover_photo || "https://cdn.pixabay.com/animation/2023/11/30/10/11/10-11-02-622_512.gif"}
             alt="cover picture"
-            className="w-full h-full object-cover cursor-pointer"
+            className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
             onClick={() => setModal('cover')}
           />
           <button

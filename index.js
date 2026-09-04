@@ -43,7 +43,8 @@ const instagramRoutes = require('./routes/Instagram');
 connectDB();
 
 app.use(cors({
-  origin: 'http://localhost:5173'
+  origin: ['http://localhost:5173','http://192.168.1.52:5173/'],
+  credentials: true
 }))
 app.use(express.json());
 
@@ -61,6 +62,6 @@ app.use('/Maps/',Maps)
 app.use('/Shop-Reviews/', Shop_Reviews);
 app.use('/api/auth', instagramRoutes);
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0',() => {
   console.log(`Server is running on port ${port}`);
 });

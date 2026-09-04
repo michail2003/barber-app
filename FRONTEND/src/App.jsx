@@ -18,6 +18,22 @@ import User_not_found from "./components/User_not_found";
 import { use, useEffect, useState } from "react";
 import { ProtectedButton } from "../src/components/ProtectedButton";
 
+
+
+
+// Global interceptor: automatically fixes localhost for your phone without touching your 8 files
+axios.interceptors.request.use((config) => {
+  if (config.url && config.url.includes('localhost:5000')) {
+    // If you are accessing the frontend via ngrok, use the public backend URL
+    if (window.location.hostname.includes('ngrok')) {
+      config.url = config.url.replace('http://localhost:5000', 'https://renegade-overtime-refurnish.ngrok-free.dev');
+    } else {
+      // Otherwise, keep it dynamic for local Wi-Fi or laptop development
+      config.url = config.url.replace('localhost', window.location.hostname);
+    }
+  }
+  return config;
+});
 function App() {
   const token = localStorage.getItem('token');
   if (token) {
@@ -29,7 +45,7 @@ function App() {
       <User_not_found />
       <UserNav />
 
-      <ProtectedButton roles={['barber_admin','barber']}>
+      <ProtectedButton roles={['barber_admin', 'barber']}>
         <Request_window />
       </ProtectedButton>
 
