@@ -257,7 +257,7 @@ const Reservations = () => {
 
                                                         <p className={`text-2xl font-black leading-none ${isCurrent ? "text-white" : "text-gray-900"
                                                             }`}>
-                                                            ${res.total_price || "0.00"}
+                                                            {res.total_price || "0.00"} Lek
                                                         </p>
                                                     </div>
 
@@ -352,7 +352,7 @@ const Reservations = () => {
                                                         {/* Last Cell: Right Rounding */}
                                                         <td className={`${cellBg} ${!isCurrent ? 'border-y border-r border-gray-100 rounded-r-[2rem] ' : ' border-y border-gray-100'}shadow-sm pr-8 py-6 text-right`}>
                                                             <span className={`text-lg font-black ${isCurrent ? 'text-white' : 'text-gray-900'}`}>
-                                                                ${res.total_price || '0.00'}
+                                                                {res.total_price || '0.00'} Lek
                                                             </span>
                                                         </td>
 
