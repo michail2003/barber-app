@@ -32,10 +32,53 @@ const StaffDetails = () => {
         }
     }
 
-    function SelectedBarberData(id) {
-        const barber = staff_data.find(b => (b._id === id.toString()))
-        setSelected_barber(barber)
+    async function submit_Data(id) {
+        const modified_barber = modified_barbers?.find(
+            (barber) => barber._id === id
+        );
+
+        if (modified_barber) {
+            const { _id: barber_id, ...newBarber } = modified_barber;
+
+            const barber_profile_edit = await barber_edit(
+                barber_id,
+                newBarber
+            );
+            barber_profile_edit ? alert('barber updted succesfully') : alert('something went wrong')
+            setEdit_modal(false)
+            fetchStaffData()
+
+        }
     }
+
+    function modify_barber(value, field) {
+
+        const barber = modified_barbers.find(
+            (barber) =>
+                barber._id === selected_barber._id
+        );
+
+        if (barber) {
+
+            barber[field] = value;
+
+            setModified_barbers([
+                ...modified_barbers
+            ]);
+
+        } else {
+
+            setModified_barbers([
+                ...modified_barbers,
+                {
+                    _id: selected_barber._id,
+                    [field]: value
+                }
+            ]);
+
+        }
+    }
+
 
     useEffect(() => {
         if (shopId) {
@@ -46,13 +89,10 @@ const StaffDetails = () => {
         )
     }, [])
 
-    useEffect(() => {
-        if (staff_data.length > 0) {
-            SelectedBarberData('6946adac9cd29e8dc96b030a')
-        }
-    }, [selected_barber])
 
-    console.log('selected barber', selected_barber)
+    console.log(modified_barbers)
+    console.log('barber', selected_barber)
+
     return (
         <div className="min-h-screen bg-[#F8F9FB] p-4 md:p-12">
             <div className="max-w-6xl mx-auto">
@@ -114,7 +154,7 @@ const StaffDetails = () => {
                                         <td className="px-4 md:px-8 py-4 md:py-6 block md:table-cell md:text-right">
                                             <div className="flex gap-3 md:justify-end">
                                                 <button
-                                                    onClick={() => setEdit_modal(true)}
+                                                    onClick={() => { setEdit_modal(true), setSelected_barber(barber) }}
                                                     className="flex-1 md:flex-none bg-indigo-50 text-indigo-600 px-6 py-2.5 md:py-1.5 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-all cursor-pointer"
                                                 >
                                                     Edit Barber
@@ -138,71 +178,197 @@ const StaffDetails = () => {
 
 
             {/* EDIT MODAL */}
-            {edit_modal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-2xl p-6 md:p-10 shadow-2xl my-auto">
-                        <h2 className="text-2xl font-black mb-8 text-gray-900">Barber Settings</h2>
+            {edit_modal && (() => {
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div>
-                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">Full Name</label>
-                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
-                                    value={selectedBarber.userId.name}
-                                    onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, name: e.target.value } })} />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">Phone</label>
-                                <input className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
-                                    value={selectedBarber.userId.ph_number}
-                                    onChange={(e) => setSelectedBarber({ ...selectedBarber, userId: { ...selectedBarber.userId, ph_number: e.target.value } })} />
-                            </div>
+                const modified_barber = modified_barbers?.find(
+                    (barber) => barber._id === selected_barber._id
+                );
 
-                            {/* START/END HOUR LOGIC */}
-                            <div className="md:col-span-2">
-                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">Working Shift</label>
-                                <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl mt-1 border border-gray-100">
-                                    <div className="flex-1">
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Start</span>
-                                        <input
-                                            type="time"
-                                            className="bg-transparent font-bold text-gray-800 outline-none w-full cursor-pointer"
-                                            value={getHourParts(selectedBarber.hours).start}
-                                            onChange={(e) => {
-                                                const parts = getHourParts(selectedBarber.hours);
-                                                setSelectedBarber({ ...selectedBarber, hours: `${e.target.value} - ${parts.end}` });
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="w-px h-8 bg-gray-200"></div>
-                                    <div className="flex-1">
-                                        <span className="text-[9px] text-gray-400 block uppercase font-bold">End</span>
-                                        <input
-                                            type="time"
-                                            className="bg-transparent font-bold text-gray-800 outline-none w-full cursor-pointer"
-                                            value={getHourParts(selectedBarber.hours).end}
-                                            onChange={(e) => {
-                                                const parts = getHourParts(selectedBarber.hours);
-                                                setSelectedBarber({ ...selectedBarber, hours: `${parts.start} - ${e.target.value}` });
-                                            }}
-                                        />
+                return (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md overflow-y-auto">
+
+                        <div className="bg-white rounded-[2.5rem] w-full max-w-2xl p-6 md:p-10 shadow-2xl my-auto">
+
+                            <h2 className="text-2xl font-black mb-8 text-gray-900">
+                                Barber Settings
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                                {/* FULL NAME */}
+                                <div>
+                                    <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">
+                                        Full Name
+                                    </label>
+
+                                    <input
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
+                                        value={
+                                            modified_barber?.name ??
+                                            selected_barber.userId.name
+                                        }
+                                        onChange={(e) => modify_barber((e.target.value), 'name')}
+                                    />
+                                </div>
+
+
+                                {/* PHONE */}
+                                <div>
+                                    <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">
+                                        Phone
+                                    </label>
+
+                                    <input
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500"
+                                        placeholder={
+                                            modified_barber?.ph_number ??
+                                            selected_barber.userId?.ph_number
+                                        }
+                                        type='number'
+                                        onChange={(e) => modify_barber((e.target.value), 'ph_nu')}
+                                    />
+                                </div>
+
+
+                                {/* WORKING SHIFT */}
+                                <div className="md:col-span-2">
+
+                                    <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest ml-1">
+                                        Working Shift
+                                    </label>
+
+                                    <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl mt-1 border border-gray-100">
+
+                                        {/* START */}
+                                        <div className="flex-1">
+
+                                            <span className="text-[9px] text-gray-400 block uppercase font-bold">
+                                                Start
+                                            </span>
+
+                                            <input
+                                                type="time"
+                                                className="bg-transparent font-bold text-gray-800 outline-none w-full cursor-pointer"
+                                                value={
+                                                    modified_barber?.hours_start ??
+                                                    selected_barber.hours_start ??
+                                                    ""
+                                                }
+                                                onChange={(e) => modify_barber((e.target.value), 'hours_start')}
+                                            />
+
+                                        </div>
+
+
+                                        <div className="w-px h-8 bg-gray-200"></div>
+
+
+                                        {/* END */}
+                                        <div className="flex-1">
+
+                                            <span className="text-[9px] text-gray-400 block uppercase font-bold">
+                                                End
+                                            </span>
+
+                                            <input
+                                                type="time"
+                                                className="bg-transparent font-bold text-gray-800 outline-none w-full cursor-pointer"
+                                                value={
+                                                    modified_barber?.hours_end ??
+                                                    selected_barber.hours_end ??
+                                                    ""
+                                                }
+                                                onChange={(e) => modify_barber((e.target.value), 'hours_end')}
+                                            />
+
+                                        </div>
+
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="flex flex-col md:flex-row gap-4 mt-10">
-                            <button
-                                onClick={handleSave}
-                                disabled={!hasChanges()}
-                                className={`flex-[2] py-4 rounded-2xl font-bold transition-all shadow-xl ${hasChanges() ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed shadow-none'}`}
-                            >
-                                Update Profile
-                            </button>
-                            <button onClick={() => setIsEditOpen(false)} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
+                                {/* Role */}
+
+
+                                <div className="relative flex bg-indigo-100 p-1 rounded-2xl w-full">
+
+                                    {/* Slider */}
+                                    <div
+                                        className={`absolute top-1 bottom-1 w-1/2 bg-white rounded-xl
+        shadow-[0_3px_10px_rgba(79,70,229,0.3),0_0_18px_rgba(79,70,229,0.2)]
+        transition-transform duration-300
+        ${selected_barber.userId?.role === "barber"
+                                                ? "translate-x-full"
+                                                : "translate-x-0"
+                                            }`}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            modify_barber("barber_admin", "role");
+                                            setSelected_barber({
+                                                ...selected_barber,
+                                                userId: { ...selected_barber.userId, role: "barber_admin" }
+                                            });
+                                        }}
+                                        className={`relative z-10 flex-1 py-3 font-bold text-sm transition-colors
+                                            ${selected_barber.userId?.role === "barber_admin"
+                                                ? "text-black"
+                                                : "text-gray-500"
+                                            }`}
+                                    >
+                                        Barber Admin
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            modify_barber("barber", "role");
+                                            setSelected_barber({
+                                                ...selected_barber,
+                                                userId: { ...selected_barber.userId, role: "barber" }
+                                            });
+                                        }}
+                                        className={`relative z-10 flex-1 py-3 font-bold text-sm transition-colors
+            ${selected_barber.userId?.role === "barber"
+                                                ? "text-black"
+                                                : "text-gray-500"
+                                            }`}
+                                    >
+                                        Barber
+                                    </button>
+
+                                </div>
+                            </div>
+
+
+                            {/* BUTTONS */}
+                            <div className="flex flex-col md:flex-row gap-4 mt-10">
+
+                                <button
+                                    className={`flex-[2] py-4 rounded-2xl font-bold transition-all shadow-xl ${modified_barbers?.length > 0
+                                        ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 cursor-pointer"
+                                        : "bg-gray-400 text-white cursor-not-allowed shadow-none"
+                                        }`}
+                                    onClick={() => submit_Data(selected_barber._id)}
+                                >
+                                    Update Profile
+                                </button>
+
+                                <button
+                                    onClick={() => setEdit_modal(false)}
+                                    className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+
+                            </div>
+
                         </div>
                     </div>
-                </div>
-            )}
+                );
+
+            })()}
 
             {/* SERVICES EDIT MODAL */}
             {services_modal && (
