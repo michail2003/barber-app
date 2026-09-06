@@ -142,7 +142,7 @@ const StaffDetails = () => {
                                         <td className="px-4 md:px-8 py-4 md:py-6 block md:table-cell md:text-right">
                                             <div className="flex gap-3 md:justify-end">
                                                 <button
-                                                    onClick={() => { setServices_modal(true) }}
+                                                    onClick={() => { setServices_modal(true), setSelected_barber(barber) }}
                                                     className="flex-1 md:flex-none bg-indigo-50 text-indigo-600 px-6 py-2.5 md:py-1.5 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-all cursor-pointer"
                                                 >
                                                     Edit services
@@ -381,8 +381,8 @@ const StaffDetails = () => {
 
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                             {catalog.map((item) => {
-                                const isSelected = selectedBarber.services.some(s => s.service === item._id);
-                                const currentService = selectedBarber.services.find(s => s.service === item._id);
+                                const isSelected = selected_barber.services.some(s => s.service === item._id);
+                                const currentService = selected_barber.services.find(s => s.service === item._id);
                                 return (
                                     <div
                                         key={item._id}
@@ -392,16 +392,20 @@ const StaffDetails = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    const isCurrentlySelected = selectedBarber.services.some(s => s.service === item._id);
-                                                    if (isCurrentlySelected) {
-                                                        setSelectedBarber({
-                                                            ...selectedBarber,
-                                                            services: selectedBarber.services.filter(s => s.service !== item._id)
+                                                    if (isSelected) {
+                                                        let services_filter = selected_barber.services.filter(s => s.service !== item._id)
+                                                        console.log('filter', services_filter)
+                                                        setSelected_barber({
+                                                            ...selected_barber,
+                                                            services: services_filter
                                                         });
+
+
+                                                        modify_barber(services_filter, 'services')
                                                     } else {
-                                                        setSelectedBarber({
-                                                            ...selectedBarber,
-                                                            services: [{ service: item._id, duration: 15 }]
+                                                        setSelected_barber({
+                                                            ...selected_barber,
+                                                            services: [...selected_barber.services, { service: item._id, duration: 10 }]
                                                         });
                                                     }
                                                 }}
@@ -421,10 +425,15 @@ const StaffDetails = () => {
                                                 <div className="flex items-center bg-white border border-indigo-200 rounded-lg overflow-hidden shadow-sm">
                                                     <button
                                                         type="button"
-                                                        onClick={() => setSelectedBarber({
-                                                            ...selectedBarber,
-                                                            services: [{ service: item._id, duration: Math.max(0, currentService.duration - 5) }]
-                                                        })}
+                                                        onClick={() => {
+                                                            currentService.duration -= 5
+
+                                                            setSelected_barber({
+                                                                ...selected_barber,
+                                                                services: [...selected_barber.services]
+
+                                                            })
+                                                        }}
                                                         className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold cursor-pointer"
                                                     >–</button>
                                                     <input
@@ -436,8 +445,8 @@ const StaffDetails = () => {
                                                     <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setSelectedBarber({
-                                                            ...selectedBarber,
+                                                        onClick={() => setSelected_barber({
+                                                            ...selected_barber,
                                                             services: [{ service: item._id, duration: currentService.duration + 5 }]
                                                         })}
                                                         className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold cursor-pointer"
@@ -452,13 +461,12 @@ const StaffDetails = () => {
 
                         <div className="mt-6 flex gap-3">
                             <button
-                                onClick={handleSave}
-                                disabled={!hasChanges()}
-                                className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-xl ${hasChanges() ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed shadow-none'}`}
+
+                                className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-xl ${modified_barbers ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed shadow-none'}`}
                             >
                                 Update Profile
                             </button>
-                            <button onClick={() => setIsServiceEditOpen(false)} className="bg-gray-100 text-gray-500 px-6 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
+                            <button onClick={() => setServices_modal(false)} className="bg-gray-100 text-gray-500 px-6 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
                         </div>
                     </section>
                 </div>
