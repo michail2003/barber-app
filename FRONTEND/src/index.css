@@ -7,6 +7,7 @@
 @import "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
 
+
 /* 3. Theme configuration */
 @theme {
 --font-playwrite: "Playwrite ID", cursive;
