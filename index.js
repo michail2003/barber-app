@@ -48,7 +48,7 @@ app.use(cors({
 }))
 app.use(express.json());
 
-app.use('/userview-shops', shops);
+app.use('/', shops);
 app.use('/shop-manager', shop_manager);
 app.use('/reservations', reservation);
 app.use('/user-managment', User);

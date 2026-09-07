@@ -47,6 +47,7 @@ const StaffDetails = () => {
             barber_profile_edit ? alert('barber updted succesfully') : alert('something went wrong')
             setEdit_modal(false)
             fetchStaffData()
+            setModified_barbers([])
 
         }
     }
@@ -79,7 +80,153 @@ const StaffDetails = () => {
         }
     }
 
+    function duration_toggle(service, duration) {
 
+        const new_copy = [...modified_barbers]
+
+        const barber_index = new_copy.findIndex(
+            b => b._id === selected_barber._id
+        )
+
+        // Barber is not modified yet
+        if (barber_index === -1) {
+
+            new_copy.push({
+                _id: selected_barber._id,
+                services: [{
+                    service: service.serviceID,
+                    duration: duration
+                }]
+            })
+
+        } else {
+
+            const barber = new_copy[barber_index]
+
+            // Barber exists, but has no services yet
+            if (!barber.services) {
+
+                barber.services = [{
+                    service: service.serviceID,
+                    duration: duration
+                }]
+
+            } else {
+
+                const barber_service = barber.services.find(
+                    s => s.service === service.serviceID
+                )
+
+                if (barber_service) {
+
+                    // Update duration
+                    barber_service.duration = duration
+
+                } else {
+
+                    // Add service
+                    barber.services.push({
+                        service: service.serviceID,
+                        duration: duration
+                    })
+                }
+            }
+        }
+
+        setModified_barbers(new_copy)
+    }
+
+    function services_toggle(service, command) {
+
+        const new_copy = [...modified_barbers]
+
+        const barber_index = modified_barbers.findIndex(
+            b => b._id === selected_barber._id
+        )
+
+        if (barber_index !== -1) {
+
+            const barber = new_copy[barber_index]
+
+            const exist_in_services = barber.services?.some(
+                b => b.service === service.serviceID
+            )
+
+            const exist_in_services_remove = barber.services_remove?.some(
+                b => b.service === service.serviceID
+            )
+
+            if (command === 'remove') {
+
+                if (exist_in_services) {
+                    barber.services = barber.services.filter(
+                        s => s.service !== service.serviceID
+                    )
+                }
+
+                barber.services_remove = [
+                    ...(barber.services_remove ?? []),
+                    service.serviceID
+                ]
+
+
+
+
+            } else if (command === 'add') {
+
+                if (exist_in_services_remove) {
+                    barber.services_remove = barber.services_remove.filter(
+                        s => s.service !== service.serviceID
+                    )
+                }
+
+                barber.services = [
+                    ...(barber.services ?? []),
+                    {
+                        service: service.serviceID,
+                        duration: 0
+                    }
+                ]
+            }
+        }
+
+        else {
+
+            new_copy.push({
+                _id: selected_barber._id,
+
+                ...(command === 'add'
+                    ? {
+                        services: [{
+                            service: service.serviceID,
+                            duration: 0
+                        }]
+                    }
+                    : {
+                        services_remove: [
+                            service.serviceID
+                        ]
+                    }
+                )
+            })
+        }
+
+        setModified_barbers(new_copy)
+    }
+
+    function clearServices() {
+
+        const barber = modified_barbers.find(
+            b => b._id === selected_barber._id
+        )
+
+        if (!barber) return
+
+        barber.services = []
+        barber.services_remove = []
+
+        setModified_barbers([...modified_barbers])
+    }
     useEffect(() => {
         if (shopId) {
             fetchStaffData()
@@ -90,8 +237,7 @@ const StaffDetails = () => {
     }, [])
 
 
-    console.log(modified_barbers)
-    console.log('barber', selected_barber)
+    console.log('payload', modified_barbers)
 
     return (
         <div className="min-h-screen bg-[#F8F9FB] p-4 md:p-12">
@@ -381,8 +527,9 @@ const StaffDetails = () => {
 
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                             {catalog.map((item) => {
-                                const isSelected = selected_barber.services.some(s => s.service === item._id);
-                                const currentService = selected_barber.services.find(s => s.service === item._id);
+
+                                const isSelected = selected_barber.services.some(s => s.service === item.serviceID);
+                                const currentService = selected_barber.services.find(s => s.service === item.serviceID);
                                 return (
                                     <div
                                         key={item._id}
@@ -393,20 +540,17 @@ const StaffDetails = () => {
                                                 type="button"
                                                 onClick={() => {
                                                     if (isSelected) {
-                                                        let services_filter = selected_barber.services.filter(s => s.service !== item._id)
-                                                        console.log('filter', services_filter)
                                                         setSelected_barber({
                                                             ...selected_barber,
-                                                            services: services_filter
+                                                            services: selected_barber.services.filter(s => s.service !== item.serviceID)
                                                         });
-
-
-                                                        modify_barber(services_filter, 'services')
+                                                        services_toggle(item, 'remove')
                                                     } else {
                                                         setSelected_barber({
                                                             ...selected_barber,
-                                                            services: [...selected_barber.services, { service: item._id, duration: 10 }]
+                                                            services: [...selected_barber.services, { service: item.serviceID, duration: 0 }]
                                                         });
+                                                        services_toggle(item, 'add')
                                                     }
                                                 }}
                                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${isSelected ? 'bg-indigo-800' : 'bg-gray-300'}`}
@@ -427,12 +571,8 @@ const StaffDetails = () => {
                                                         type="button"
                                                         onClick={() => {
                                                             currentService.duration -= 5
+                                                            duration_toggle(item, currentService.duration)
 
-                                                            setSelected_barber({
-                                                                ...selected_barber,
-                                                                services: [...selected_barber.services]
-
-                                                            })
                                                         }}
                                                         className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold cursor-pointer"
                                                     >–</button>
@@ -445,10 +585,10 @@ const StaffDetails = () => {
                                                     <span className="pr-2 text-[10px] font-bold text-gray-400">MIN</span>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setSelected_barber({
-                                                            ...selected_barber,
-                                                            services: [{ service: item._id, duration: currentService.duration + 5 }]
-                                                        })}
+                                                        onClick={() => {
+                                                            currentService.duration += 5,
+                                                                duration_toggle(item, currentService.duration)
+                                                        }}
                                                         className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold cursor-pointer"
                                                     >+</button>
                                                 </div>
@@ -461,12 +601,13 @@ const StaffDetails = () => {
 
                         <div className="mt-6 flex gap-3">
                             <button
+                                onClick={() => { setServices_modal(false), submit_Data(selected_barber._id) }}
 
                                 className={`flex-1 py-4 rounded-2xl font-bold transition-all shadow-xl ${modified_barbers ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100 cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed shadow-none'}`}
                             >
                                 Update Profile
                             </button>
-                            <button onClick={() => setServices_modal(false)} className="bg-gray-100 text-gray-500 px-6 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
+                            <button onClick={() => { setServices_modal(false), clearServices() }} className="bg-gray-100 text-gray-500 px-6 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all cursor-pointer">Cancel</button>
                         </div>
                     </section>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { edit_shop, getShop, getcatalog } from '../../Api/Shops.js';
+import { edit_shop, getShop, get_shop_details, getcatalog } from '../../Api/Shops.js';
 import { Camera, MapPinPen, Save, Store, Phone, Clock } from 'lucide-react';
 
 const Edit_Shop = () => {
@@ -57,7 +57,7 @@ const Edit_Shop = () => {
 
   async function fetchShop() {
     try {
-      const response = await getShop('Elite%20Barber%20Shop-725');
+      const response = await get_shop_details(localStorage.getItem('shop'));
       setShop(response);
 
       const catalogResponse = await getcatalog(response._id);

@@ -1,5 +1,5 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:5000/userview-shops';
+const API_URL = 'http://localhost:5000';
 const API_Shop = "http://localhost:5000/shop-manager";
 const API_Services = "http://localhost:5000/managing-services";
 
@@ -19,8 +19,8 @@ async function getShops() {
 
 async function getShop(slug) {
     try {
-        const response = await axios.get(`${API_Shop}/${slug}`);
-        console.log('Shop data:', response.data);   
+        const response = await axios.get(`${API_URL}/${slug}`);
+        console.log('Shop data:', response.data);
         return response.data;
     } catch (error) {
         console.error('Error finding shop:', error);
@@ -31,8 +31,8 @@ async function getShop(slug) {
 async function addShop(shopData) {
     try {
         const response = await axios.post(`${API_Shop}/addingshop`, shopData);
-            return response.data;
-       
+        return response.data;
+
     } catch (error) {
         console.error('Error adding shop:', error);
         throw error;
@@ -40,7 +40,7 @@ async function addShop(shopData) {
 }
 async function getbarbers(slug) {
     try {
-        const response = await axios.get(`${API_Shop}/${slug}/barbers`);
+        const response = await axios.get(`${API_URL}/${slug}/barbers`);
         return response.data;
     } catch (error) {
         console.error('Error fetching barbers:', error);
@@ -58,6 +58,17 @@ async function getcatalog(id) {
     }
 }
 
+async function get_shop_details(id) {
+    try {
+        const response = await axios.get(`${API_Shop}/shop-details/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching shop services:', error);
+        throw error;
+    }
+}
+
+
 async function edit_shop(shopID, updatedData) {
     try {
         const response = await axios.put(`${API_Shop}/shop-editing/info/${shopID}`, updatedData);
@@ -67,4 +78,12 @@ async function edit_shop(shopID, updatedData) {
         throw error;
     }
 }
-export { getShops,addShop,getShop,getbarbers,getcatalog,edit_shop };
+export {
+    getShops,
+    addShop,
+    getShop,
+    getbarbers,
+    getcatalog,
+    edit_shop,
+    get_shop_details
+};

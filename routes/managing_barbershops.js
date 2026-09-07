@@ -106,10 +106,11 @@ router.get('/barber-details/:id', async (req, res) => {
     }
 });
 
-router.get('/:slug', async (req, res) => {
+
+router.get('/shop-details/:id', async (req, res) => {
     try {
-        const slug = req.params.slug;
-        const shop = await Barber_Shop.findOne({ slug: slug });
+        const id = req.params.id;
+        const shop = await Shop.findById(id);
         if (!shop) {
             return res.status(404).json({ message: 'Barber shop not found' });
         }
@@ -117,29 +118,7 @@ router.get('/:slug', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
-});
-
-router.get('/:slug/barbers', async (req, res) => {
-    try {
-        const slug = req.params.slug;
-        const shop = await Barber_Shop.findOne({ slug: slug });
-        if (!shop) {
-            return res.status(404).json({ message: 'Barber shop not found' });
-        }
-        const barbers = await Barber.find({ shopId: shop._id.toString() })
-            .populate('userId', 'name ph_number');
-        res.status(200).json(
-            barbers.map(barber => ({
-                id: barber._id,
-                name: barber.userId.name,
-                working_hours: [barber.hours_start, barber.hours_end],
-                phone: barber.userId.ph_number
-            }))
-        );
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
+})
 
 router.put('/shop-editing/info/:shopID',
 
@@ -176,7 +155,7 @@ router.put('/shop-editing/info/:shopID',
                     return res.status(400).json({ message: error });
                 }
             }
-            
+
             if (location && !isValidLatLng(JSON.parse(location))) {
                 return res.status(400).json({ message: 'Invalid location coordinates' });
             }

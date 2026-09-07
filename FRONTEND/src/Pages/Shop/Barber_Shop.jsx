@@ -145,7 +145,7 @@ const Barber_Shop = () => {
         }
         if (selectedBarber && finalOutput && selectedServices.length > 0) {
             const total = catalog
-                .filter(s => selectedServices.includes(s._id))
+                .filter(s => selectedServices.includes(s.serviceID))
                 .reduce((sum, s) => sum + Number(s.price), 0);
             setTotalPrice(total);
             setStepsCompleted(true);
@@ -163,7 +163,6 @@ const Barber_Shop = () => {
             }
         }
     }, [availability]);
-
     return (
         <div className="min-h-screen bg-[#F9FAFB] text-gray-900 pb-12">
             {/* Hero Section */}
@@ -243,8 +242,8 @@ const Barber_Shop = () => {
                                 {catalog.map(s => (
                                     <div
                                         key={s._id}
-                                        onClick={() => AddServices(s._id)}
-                                        className={`flex justify-between items-center p-5 rounded-3xl cursor-pointer transition-all border-2 ${selectedServices.includes(s._id) ? 'border-indigo-600 bg-indigo-50/50' : 'border-gray-50 bg-gray-50/30'}`}
+                                        onClick={() => AddServices(s.serviceID)}
+                                        className={`flex justify-between items-center p-5 rounded-3xl cursor-pointer transition-all border-2 ${selectedServices.includes(s.serviceID) ? 'border-indigo-600 bg-indigo-50/50' : 'border-gray-50 bg-gray-50/30'}`}
                                     >
                                         <div>
                                             <p className="font-bold">{s.service}</p>
@@ -400,7 +399,7 @@ const Barber_Shop = () => {
                                             <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Services</p>
                                             {selectedServices.length > 0 ? (
                                                 <p className="text-sm font-bold">
-                                                    {catalog.filter(s => selectedServices.includes(s._id)).map(s => s.service).join(', ')}
+                                                    {catalog.filter(s => selectedServices.includes(s.serviceID)).map(s => s.service).join(', ')}
                                                 </p>
                                             ) : (
                                                 <p className="text-sm text-indigo-300/50 italic">None selected</p>
@@ -448,7 +447,7 @@ const Barber_Shop = () => {
             {/* section 2 (store) */}
             {currentSection === 2 &&
                 <div className="md:mx-20 p-4 md:p-8 rounded-2xl shadow-lg border border-indigo-200">
-                    
+
                 </div>
             }
 

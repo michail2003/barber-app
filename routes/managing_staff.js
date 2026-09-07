@@ -68,35 +68,49 @@ router.put('/update-staff/:barberId', async (req, res) => {
 
         if (services) {
             const serviceIds = services.map(s => s.service);
-            const shop = await Shop.findById(barber.shopId);
-
-            // check if any already exist in barber
-            const alreadyExists = barber.services.some(s =>
-                serviceIds.includes(s.service.toString())
-            );
-            if (alreadyExists) {
-                return res.status(400).json({ message: "one or more services already exist in barber" });
-            }
 
             // existence check against shop catalog
-            const shopIds = shop.services.map(s => s._id.toString());
+            const shop = await Shop.findById(barber.shopId);
+            const shopIds = shop.services.map(s => s.service.toString());
             const allExist = serviceIds.every(id => shopIds.includes(id));
+
             if (!allExist) {
-                return res.status(400).json({ message: 'One or more services do not exist' });
+                return res.status(400).json({ message: 'One or more services do not exist in catalog' });
             }
 
-            // merge duration into matched shop services
-            const serviceMap = new Map(services.map(s => [s.service, s.duration]));
-            const shop_services = shop.services
-                .filter(s => serviceMap.has(s._id.toString()))
-                .map(s => ({
-                    service: s._id,
-                    price: s.price,
-                    service_name: s.service_name,
-                    duration: serviceMap.get(s._id.toString())
-                }));
+            const existingServices = [];
+            const newServices = [];
 
-            barber.services.push(...shop_services)
+            services.forEach(s => {
+                const existing = barber.services.find(
+                    bs => bs.service.toString() === s.service.toString()
+                );
+
+                if (existing) {
+                    existing.duration = s.duration;
+                    existingServices.push(s);
+                } else {
+                    newServices.push(s);
+                }
+            });
+
+            console.log('new', newServices, 'old', existingServices)
+
+
+            if (newServices.length > 0) {
+                // merge duration into matched shop services
+                const serviceMap = new Map(newServices.map(s => [s.service, s.duration]));
+                const shop_services = shop.services
+                    .filter(s => serviceMap.has(s.service.toString()))
+                    .map(s => ({
+                        service: s.service,
+                        price: s.price,
+                        service_name: s.service_name,
+                        duration: serviceMap.get(s.service.toString())
+                    }));
+                barber.services.push(...shop_services)
+            }
+
         }
 
         if (services_remove) {

@@ -1,17 +1,52 @@
 const express = require('express');
 const router = express.Router();
+const Barber = require('../models/barber');
 const Shop = require('../models/Shop');
 
 router.get('/', async (req, res) => {
-        try {
-            const shops = await Shop.find();
-            if (shops.length === 0) {
-                return res.status(404).json({ message: 'No barber shops found' });
-            }
-            res.json(shops);
-        } catch (err) {
-            res.status(500).json({ message: 'Server error', error: err.message });
+    try {
+        const shops = await Shop.find();
+        if (shops.length === 0) {
+            return res.status(404).json({ message: 'No barber shops found' });
         }
-    });
+        res.json(shops);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
 
+router.get('/:slug', async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const shop = await Shop.findOne({ slug: slug });
+        if (!shop) {
+            return res.status(404).json({ message: 'Barber shop not found' });
+        }
+        res.json(shop);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+router.get('/:slug/barbers', async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const shop = await Shop.findOne({ slug: slug });
+        if (!shop) {
+            return res.status(404).json({ message: 'Barber shop not found' });
+        }
+        const barbers = await Barber.find({ shopId: shop._id.toString() })
+            .populate('userId', 'name ph_number');
+        res.status(200).json(
+            barbers.map(barber => ({
+                id: barber._id,
+                name: barber.userId.name,
+                working_hours: [barber.hours_start, barber.hours_end],
+                phone: barber.userId.ph_number
+            }))
+        );
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 module.exports = router;
