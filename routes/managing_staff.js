@@ -104,30 +104,28 @@ router.put('/update-staff/:barberId', async (req, res) => {
                     .filter(s => serviceMap.has(s.service.toString()))
                     .map(s => ({
                         service: s.service,
-                        price: s.price,
-                        service_name: s.service_name,
                         duration: serviceMap.get(s.service.toString())
                     }));
+                console.log(shop_services)
                 barber.services.push(...shop_services)
             }
 
         }
 
-        if (services_remove) {
-
-            // check the service exist in the barber
+        if (services_remove?.length) {
             const allExist = services_remove.every(id =>
                 barber.services.some(s => s.service.toString() === id)
             );
 
             if (!allExist) {
-                return res.status(400).json({ message: "one or more services don't exist for deletion in barber" });
+                return res.status(400).json({
+                    message: "one or more services don't exist for deletion in barber"
+                });
             }
 
-            //removal
-            services_remove.forEach(service => {
-                barber.services.pull({ service: service });
-            });
+            barber.services.pull(
+                ...services_remove.map(id => ({ service: id }))
+            );
         }
         await barber.save();
         await User.findByIdAndUpdate(barber.userId, { name, ph_number, role });

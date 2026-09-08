@@ -6,7 +6,8 @@ const Barber = require('../models/barber');
 const dayjs = require('dayjs');
 const axios = require("axios");
 const port = process.env.PORT || 3000;
-const {authMiddleware,allowRoles }= require('../middleware/auth_middleware')
+const { authMiddleware, allowRoles } = require('../middleware/auth_middleware')
+const { format_services } = require('../global_functions')
 
 
 function isOverlapping(start1, end1, start2, end2) {
@@ -24,8 +25,16 @@ async function Accepted(request) {
         const reservePayload = {
             userid: request.userid,
             barberId: request.barberId,
-            services: request.services.map(s => s.serviceID),
+            services: request.services.map(s => ({
+                id: s.serviceID,
+                Service_name: s.name,
+                duration: s.duration,
+                price: s.price
+
+            })),
             start: request.start,
+            total_price: request.total_price,
+            duration: request.duration
         };
         reserveResponse = await axios.post(`http://localhost:${port}/reservations/reserve`, reservePayload);
     } catch (err) {
@@ -95,14 +104,15 @@ router.post('/', async (req, res) => {
         if (!barber) {
             return res.status(404).json({ message: 'Barber not found' });
         }
-        const serviceDetails = barber.services
-            .filter(item => services.includes(item.service.toString()))
-            .map(item => ({
-                serviceID: item.service,
-                name: item.service_name,
-                price: item.price,
-                duration: item.duration
-            }));
+        console.log("INPUT SERVICES:", services);
+
+        const serviceDetails = await format_services(
+            barber._id,
+            barber.shopId,
+            services
+        );
+
+        console.log("FORMATTED SERVICES:", serviceDetails);
         if (!serviceDetails.length) {
             return res.status(400).json({ message: 'Requested services not offered by this barber' });
         }
@@ -200,7 +210,7 @@ router.put('/:id/', async (req, res) => {
 // Get all requests for a specific barber
 router.get('/barber-requests/:id/',
     authMiddleware,
-    allowRoles('barber','barber_admin'), async (req, res) => {
+    allowRoles('barber', 'barber_admin'), async (req, res) => {
         try {
             const { id } = req.params;
 

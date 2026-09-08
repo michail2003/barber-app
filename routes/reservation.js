@@ -8,6 +8,7 @@ const Barber = require('../models/barber');
 const { Reservation } = require('../models/Reservation');
 const { allowRoles, authMiddleware } = require('../middleware/auth_middleware');
 const User = require('../models/User');
+const format_services = require('../global_functions')
 
 function isOverlapping(start1, end1, start2, end2) {
   // Day.js handles the string-to-date conversion automatically here
@@ -66,6 +67,8 @@ router.post('/reserve', async (req, res) => {
       barberId,
       services,
       start,
+      total_price,
+      duration
     } = req.body;
 
     const userVerification = await User.findById(userid);
@@ -77,23 +80,8 @@ router.post('/reserve', async (req, res) => {
     if (!barber) {
       return res.status(404).json({ message: 'Barber not found' });
     }
-    const serviceDetails = barber.services
-      .filter(item => services.includes(item.service.toString()))
-      .map(item => ({
-        serviceID: item.service.toString(),
-        name: item.service_name,
-        price: item.price,
-        duration: item.duration
-      }));
-    if (serviceDetails.length === 0) {
-      return res.status(400).json({ message: 'Requested services not offered by this barber' });
-    }
-
-    // 2. Calculate the total duration
-    const servicesTotalDuration = serviceDetails.reduce((acc, s) => acc + s.duration, 0);
-    const servicesTotalPrice = serviceDetails.reduce((total, s) => total + s.price, 0);
     const startTime = dayjs(start);
-    const endTime = startTime.add(servicesTotalDuration, 'minute');
+    const endTime = startTime.add(duration, 'minute');
 
     if (startTime.isBefore(dayjs())) {
       return res.status(400).json({ message: 'Cannot book in the past' });
@@ -120,12 +108,12 @@ router.post('/reserve', async (req, res) => {
       userid,
       barberId,
       shopId: barber.shopId,
-      services: serviceDetails.map(s => ({ id: s.serviceID, Service_name: s.name })),
+      services: services,
       start: startTime.format("YYYY-MM-DDTHH:mm:ss"),
       end: endTime.format("YYYY-MM-DDTHH:mm:ss"),
       status: 'confirmed',
-      total_price: servicesTotalPrice,
-      duration: servicesTotalDuration
+      total_price: total_price,
+      duration: duration,
     });
 
     // 7️⃣ Link reservation to barber
