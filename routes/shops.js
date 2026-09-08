@@ -4,14 +4,49 @@ const Barber = require('../models/barber');
 const Shop = require('../models/Shop');
 
 router.get('/', async (req, res) => {
+    
     try {
-        const shops = await Shop.find();
+
+        const shops = await Shop.aggregate([
+            {
+                $lookup: {
+                    from: "barbers",
+                    localField: "_id",
+                    foreignField: "shopId",
+                    as: "barbers"
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    name: 1,
+                    address: 1,
+                    phone: 1,
+                    hours_start: 1,
+                    hours_end: 1,
+                    cover_photo: 1,
+                    profile_pic: 1,
+                    "location.coordinates": 1,
+                    barber_count: { $size: "$barbers" }
+                }
+            }
+        ]);
+
         if (shops.length === 0) {
-            return res.status(404).json({ message: 'No barber shops found' });
+            return res.status(404).json({
+                message: 'No barber shops found'
+            });
         }
-        res.json(shops);
+
+        res.status(200).json(shops);
+
     } catch (err) {
-        res.status(500).json({ message: 'Server error', error: err.message });
+
+        res.status(500).json({
+            message: 'Server error',
+            error: err.message
+        });
+
     }
 });
 

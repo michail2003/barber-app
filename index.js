@@ -43,7 +43,7 @@ const instagramRoutes = require('./routes/Instagram');
 connectDB();
 
 app.use(cors({
-  origin: ['http://localhost:5173','http://192.168.1.52:5173', 'http://192.168.1.41:5173'],
+  origin: ['http://localhost:5173','http://192.168.1.52:5173', 'http://192.168.1.41:5173','http://192.168.1.191:5173'],
   credentials: true
 }))
 app.use(express.json());
