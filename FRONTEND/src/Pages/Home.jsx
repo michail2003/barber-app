@@ -297,13 +297,6 @@ const Home = () => {
 
                           </div>
 
-                          {/* Small separator */}
-                          <span className="w-1 h-1 rounded-full bg-gray-300" />
-
-                          <span>
-                            Available for booking
-                          </span>
-
                         </div>
 
                       </div>
