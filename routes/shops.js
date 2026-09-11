@@ -2,10 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Barber = require('../models/barber');
 const Shop = require('../models/Shop');
+const User = require('../models/User')
+const { authMiddleware, allowRoles } = require('../middleware/auth_middleware');
+const { find_in_db } = require('../global_functions');
 
-router.get('/', async (req, res) => {
-    
+router.get('/', authMiddleware, async (req, res) => {
+
     try {
+        const user_id = req.user.user_id || req.user.id;
+        const user = await find_in_db(User, user_id, res, 'User not Found')
 
         const shops = await Shop.aggregate([
             {
@@ -21,13 +26,17 @@ router.get('/', async (req, res) => {
                     _id: 0,
                     name: 1,
                     address: 1,
+                    slug: 1,
                     phone: 1,
                     hours_start: 1,
                     hours_end: 1,
                     cover_photo: 1,
                     profile_pic: 1,
                     "location.coordinates": 1,
-                    barber_count: { $size: "$barbers" }
+                    barber_count: { $size: "$barbers" },
+                    favourite: {
+                        $in: ["$_id", user.favourites]
+                    }
                 }
             }
         ]);

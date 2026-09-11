@@ -17,7 +17,6 @@ const authMiddleware = (req, res, next) => {
 
     // 4. Attach user info to request
     req.user = decoded;
-
     // 5. Continue
     next();
   } catch (error) {

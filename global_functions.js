@@ -1,7 +1,12 @@
 const mongoose = require("mongoose");
+
 const Barber = require("./models/barber")
 const BarberShop = require("./models/Shop")
+const Request = require("./models/Request")
+const Reservation = require("./models/Reservation")
+const Review = require("./models/Reviews")
 const Service = require("./models/service")
+const User = require("./models/User")
 
 async function find_in_db(Model, id, res, notFoundMessage = 'Resource not found') {
     if (!mongoose.Types.ObjectId.isValid(id)) {

@@ -7,8 +7,14 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     role: {
         type: String,
-        enum: ['admin', 'barber','user', 'barber_admin']
-    }
+        enum: ['admin', 'barber', 'user', 'barber_admin']
+    },
+    favourites: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "BarberShop"
+        }
+    ]
 });
 
 module.exports = mongoose.model('User', UserSchema);

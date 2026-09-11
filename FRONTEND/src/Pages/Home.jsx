@@ -210,9 +210,13 @@ const Home = () => {
 
                     <div className="absolute top-4 left-4">
 
-                      <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-white/10 text-white px-3 py-2 rounded-full text-xs font-semibold">
+                      <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-white/10 text-indigo-600 px-3 py-2 rounded-full text-xs font-semibold">
 
-                        <Heart className="w-5 h-5 text-indigo-600" />
+                        {shop.favourite ? (
+                          <Heart fill="currentColor" />
+                        ) : (
+                          <Heart />
+                        )}
 
                       </div>
 

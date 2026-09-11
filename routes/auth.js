@@ -63,6 +63,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({
+        user_id: user._id,
         id: barber._id, 
         role: user.role,
         shop : barber.shopId,

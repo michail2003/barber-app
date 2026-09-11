@@ -40,6 +40,7 @@ const User_Reservations = require('./routes/User_Reservations');
 const Maps = require('./routes/Maps');
 const Shop_Reviews = require('./routes/Shop_Reviews');
 const instagramRoutes = require('./routes/Instagram');
+const User_Favourites = require('./routes/User_favourites')
 connectDB();
 
 app.use(cors({
@@ -61,6 +62,7 @@ app.use('/User-Reservations/',User_Reservations)
 app.use('/Maps/',Maps)
 app.use('/Shop-Reviews/', Shop_Reviews);
 app.use('/api/auth', instagramRoutes);
+app.use('/favourites',User_Favourites);
 
 server.listen(port, '0.0.0.0',() => {
   console.log(`Server is running on port ${port}`);
