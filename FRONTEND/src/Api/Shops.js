@@ -1,5 +1,6 @@
 import axios from 'axios';
 const API_URL = 'http://localhost:5000';
+const API_Favourites = 'http://localhost:5000/favourites'
 const API_Shop = "http://localhost:5000/shop-manager";
 const API_Services = "http://localhost:5000/managing-services";
 
@@ -78,6 +79,26 @@ async function edit_shop(shopID, updatedData) {
         throw error;
     }
 }
+
+async function favourite_toggle(shopID) {
+    try {
+        const response = await axios.post(`${API_Favourites}/toggle/${shopID}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error handling favourites:', error);
+        throw error;
+    }
+}
+
+async function favourites_list() {
+    try {
+        const response = await axios.get(`${API_Favourites}/list`);
+        return response.data;
+    } catch (error) {
+        console.error('Error handling favourites:', error);
+        throw error;
+    }
+}
 export {
     getShops,
     addShop,
@@ -85,5 +106,7 @@ export {
     getbarbers,
     getcatalog,
     edit_shop,
-    get_shop_details
+    get_shop_details,
+    favourite_toggle,
+    favourites_list
 };

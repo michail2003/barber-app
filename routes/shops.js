@@ -23,7 +23,6 @@ router.get('/', authMiddleware, async (req, res) => {
             },
             {
                 $project: {
-                    _id: 0,
                     name: 1,
                     address: 1,
                     slug: 1,

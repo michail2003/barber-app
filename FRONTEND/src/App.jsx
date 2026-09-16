@@ -9,6 +9,7 @@ import StaffDetails from "./Pages/Shop/StaffDetails";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login"
 import Test from './Pages/Test'
+import Favourites from "./Pages/Favourites";
 import ShopStats from "./Pages/Shop/ShopStats";
 import Reservations from "./Pages/Shop/Reservations";
 import Edit_Shop from "./Pages/Shop/Edit_Shop";
@@ -53,6 +54,7 @@ function App() {
       <Routes>
 
         <Route path='/' element={<Home />} />
+        <Route path='/Favourites' element={<Favourites />} />
 
         <Route path='/admin/dashboard' element={
           <ProtectedRoute allowedRoles={['admin']}>

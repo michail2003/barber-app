@@ -12,8 +12,10 @@ import {
     LogOut,
     Menu,
     X,
-    Plus
+    Plus,
+    Heart
 } from 'lucide-react';
+import Favourites from '../Pages/Favourites';
 
 export function UserNav() {
     const navigate = useNavigate();
@@ -82,6 +84,22 @@ export function UserNav() {
                     `}
                 >
                     <Home className="w-5 h-5" />
+                </Link>
+
+                <Link
+                    to="/Favourites"
+                    className={`
+                        p-3 rounded-xl transition-all
+                        ${isActive('/Favourites')
+                            ? 'text-indigo-600 bg-indigo-50'
+                            : 'text-gray-500 hover:text-gray-900'
+                        }
+                    `}
+                >
+                    <Heart
+                        className="w-5 h-5"
+                        fill={isActive('/Favourites') ? 'currentColor' : 'none'}
+                    />
                 </Link>
 
                 {userId && (
@@ -213,6 +231,19 @@ export function UserNav() {
                         >
                             <Home className="w-4 h-4" />
                             Home
+                        </Link>
+
+                        <Link
+                            to="/Favourites"
+                            className={navStyle('/Favourites')}
+                        >
+                            <Heart
+                                className={`w-4 h-4 transition-all duration-300 ease-out ${isActive('/Favourites') ? 'scale-110' : 'scale-100'
+                                    }`}
+                                fill={isActive('/Favourites') ? '#4F46E5' : 'none'}
+                                stroke="#4F46E5"
+                            />
+                            Favourites
                         </Link>
 
                         {userId && (

@@ -6,18 +6,19 @@ const User = require('../models/User')
 const { authMiddleware, allowRoles } = require('../middleware/auth_middleware');
 const { find_in_db } = require('../global_functions');
 
-router.post('/toggle/:shopID/:userID', authMiddleware, async (req, res) => {
+router.post('/toggle/:shopID/', authMiddleware, async (req, res) => {
 
-    const { shopID,userID } = req.params;
+    const { shopID } = req.params;
+    const id = req.user.user_id || req.user.id;
 
-    if (!shopID || !userID) {
+    if (!shopID || !id) {
         return res.status(400).json({ message: 'Shop not selected or user not provided' })
     }
-    const user = await User.findById(userID)
+    const user = await User.findById(id)
     const shop_exists = await Shop.findById(shopID)
 
     if (!user || !shop_exists) {
-        return res.status(404).json({ message: `Shop ${shopID} or User ${userID} not exists` })
+        return res.status(404).json({ message: `Shop or User not exists` })
     }
     const shop_in_fav = user.favourites.some(fav =>
         fav.toString() === shopID
@@ -56,7 +57,7 @@ router.get('/list/', authMiddleware, async (req, res) => {
     const fav_list = await Shop.find({
         _id: { $in: user.favourites }
     }).select(
-        "name address cover_photo profile_pic location.coordinates -_id"
+        "name address cover_photo profile_pic location.coordinates"
     );
 
     return res.status(200).json(fav_list)

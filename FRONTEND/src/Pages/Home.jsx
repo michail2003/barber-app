@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getShops } from '../Api/Shops';
+import { getShops, favourite_toggle } from '../Api/Shops';
 import { Link } from 'react-router-dom';
 import {
   MapPin,
@@ -83,57 +83,21 @@ const Home = () => {
     return `${distanceKm.toFixed(1)}km`;
   };
 
+  function favourite_toggle_button(index) {
+
+    const newShops = [...shops];
+    const id = shops[index]._id
+
+    newShops[index] = {
+      ...shops[index],
+      favourite: !shops[index].favourite
+    };
+    setShops(newShops);
+    favourite_toggle(id)
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f6fa]">
-
-      {/* =========================
-          HERO / BANNER SECTION
-          ========================= */}
-      <section className="relative bg-[#0b0b10] overflow-hidden">
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(79,70,229,0.3),transparent_35%)]" />
-
-        <div className="absolute -bottom-32 -left-20 w-96 h-96 bg-indigo-600/10 blur-3xl rounded-full" />
-
-        <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-
-          <div className="max-w-4xl">
-
-            <div className="flex items-center gap-2 text-indigo-400 text-sm font-semibold mb-7">
-              <span className="w-8 h-px bg-indigo-500" />
-              FIND YOUR STYLE
-            </div>
-
-            <h1 className="text-white text-5xl md:text-7xl font-black tracking-[-0.055em] leading-[0.95]">
-              Your next
-              <span className="block text-indigo-500">
-                great cut.
-              </span>
-            </h1>
-
-            <p className="mt-7 text-gray-400 text-base md:text-lg max-w-xl leading-relaxed">
-              Discover exceptional barbers, explore their work,
-              and book your next appointment effortlessly.
-            </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.06] border border-white/10 text-gray-300 text-sm">
-                <Scissors className="w-4 h-4 text-indigo-400" />
-                <span>{shops.length} barbershops</span>
-              </div>
-
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/[0.06] border border-white/10 text-gray-300 text-sm">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span>Top rated professionals</span>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </section>
-
 
       {/* =========================
           SHOPS SECTION
@@ -208,19 +172,22 @@ const Home = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
 
 
-                    <div className="absolute top-4 left-4">
-
-                      <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-white/10 text-indigo-600 px-3 py-2 rounded-full text-xs font-semibold">
-
-                        {shop.favourite ? (
-                          <Heart fill="currentColor" />
-                        ) : (
-                          <Heart />
-                        )}
-
-                      </div>
-
-                    </div>
+                    <button
+                      className="absolute top-4 left-4 cursor-pointer flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-white/10 text-indigo-600 px-3 py-2 rounded-full text-xs font-semibold"
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        favourite_toggle_button(idx);
+                      }}
+                    >
+                      <Heart
+                        className={`w-5 h-5 transition-all duration-300 ${shop.favourite
+                            ? 'scale-110 fill-current'
+                            : 'scale-100'
+                          }`}
+                      />
+                    </button>
 
 
                     <div className="absolute top-4 right-4">
