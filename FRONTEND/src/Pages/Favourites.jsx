@@ -6,9 +6,9 @@ const Favourites = () => {
   const [test, setTest] = useState()
   const [api_results, setApi_results] = useState([])
   const [selected_el, setSelected_el] = useState()
-  
+
   const elementi = api_results[selected_el]
-  console.log('elementi',elementi)
+  console.log('elementi', elementi)
 
   function change_name_to_keli() {
 
@@ -37,22 +37,26 @@ const Favourites = () => {
       <div className="flex gap-10 m-10 items-center">
         <h1 className="text-2xl">{name}</h1>
 
-        {
-          api_results.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {api_results.length > 0 &&
             api_results.map((fav, ind) => (
+              <div key={ind}>
+                <h1>
+                  {fav.name}, {fav.address}, {ind}
+                </h1>
 
-              <div>
-                <h1>{fav.name}, {fav.address}, {ind}</h1>
                 <button
                   className="px-4 py-2 bg-red-100 cursor-pointer hover:bg-red-500 hover:text-white transition-all"
-                  onClick={() => setSelected_el(ind)}> selektoje </button>
+                  onClick={() => setSelected_el(ind)}
+                >
+                  selektoje
+                </button>
               </div>
+            ))}
+        </div>
 
-
-            ))
-          )
-        }
-        <button className="px-4 py-2 bg-blue-100 cursor-pointer hover:bg-blue-500 hover:text-white transition-all"
+        <button
+          className="px-4 py-2 bg-blue-100 cursor-pointer hover:bg-blue-500 hover:text-white transition-all"
           onClick={() => change_name_to_keli()}
         >
           change name
